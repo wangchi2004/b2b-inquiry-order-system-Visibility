@@ -65,6 +65,11 @@ create table if not exists customers (
   country text,
   whatsapp text,
   company text,
+  shipping_recipient_name text,
+  shipping_phone text,
+  shipping_country text,
+  shipping_address text,
+  shipping_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

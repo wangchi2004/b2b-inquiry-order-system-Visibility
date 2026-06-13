@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkAdminAccess } from "@/lib/admin";
+import { saveCustomerShippingDetails, type CustomerShippingDetails } from "@/lib/customerShipping";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 
 type ManualOrderItem = {
@@ -90,6 +91,10 @@ export async function createManualOrder(formData: FormData) {
   }
 
   const quoteWarning = await saveQuoteFields(order.id, formData);
+  const customerShippingWarning = await saveCustomerShippingDetails(
+    customerId,
+    readShippingDetails(formData)
+  );
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${order.id}`);
@@ -97,7 +102,9 @@ export async function createManualOrder(formData: FormData) {
     adminOrderPath(
       order.id,
       password,
-      quoteWarning ? `Manual order created. ${quoteWarning}` : "Manual order created."
+      ["Manual order created.", quoteWarning, customerShippingWarning]
+        .filter(Boolean)
+        .join(" ")
     )
   );
 }
@@ -176,11 +183,7 @@ async function saveQuoteFields(orderId: string, formData: FormData) {
       paypal_fee: readMoney(formData.get("paypal_fee")),
       paypal_collection: readMoney(formData.get("paypal_collection")),
       paypal_fee_rate: 0.05,
-      shipping_recipient_name: readNullableString(formData.get("shipping_recipient_name")),
-      shipping_phone: readNullableString(formData.get("shipping_phone")),
-      shipping_country: readNullableString(formData.get("shipping_country")),
-      shipping_address: readNullableString(formData.get("shipping_address")),
-      shipping_note: readNullableString(formData.get("shipping_note")),
+      ...readShippingDetails(formData),
       quote_updated_at: new Date().toISOString()
     })
     .eq("id", orderId);
@@ -194,6 +197,16 @@ async function saveQuoteFields(orderId: string, formData: FormData) {
   }
 
   return `Quote fields were not saved: ${error.message}`;
+}
+
+function readShippingDetails(formData: FormData): CustomerShippingDetails {
+  return {
+    shipping_recipient_name: readNullableString(formData.get("shipping_recipient_name")),
+    shipping_phone: readNullableString(formData.get("shipping_phone")),
+    shipping_country: readNullableString(formData.get("shipping_country")),
+    shipping_address: readNullableString(formData.get("shipping_address")),
+    shipping_note: readNullableString(formData.get("shipping_note"))
+  };
 }
 
 function readManualOrderItems(value: FormDataEntryValue | null) {

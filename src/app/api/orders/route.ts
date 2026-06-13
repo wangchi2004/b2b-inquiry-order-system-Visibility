@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendOrderNotificationEmails } from "@/lib/email";
+import { getCustomerShippingDetails } from "@/lib/customerShipping";
 import { getOrderLinkByToken } from "@/lib/orderLinks";
 import { validateOrderSubmission } from "@/lib/orderValidation";
 import { createSupabaseAdminClient } from "@/lib/supabase";
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     const supabase = createSupabaseAdminClient();
     const linkedCustomerId = await getLinkedCustomerId(token);
     const customerRecord = await findOrSaveCustomer(customer, linkedCustomerId);
+    const customerShippingDetails = await getCustomerShippingDetails(customerRecord.id);
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -50,6 +52,7 @@ export async function POST(request: Request) {
         country: customer.country,
         whatsapp: customer.whatsapp ?? null,
         note: customer.note ?? null,
+        ...customerShippingDetails,
         status: "new"
       })
       .select("id")

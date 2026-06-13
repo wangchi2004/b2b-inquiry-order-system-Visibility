@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkAdminAccess } from "@/lib/admin";
 import { getAdminOrderById, type AdminOrderItem } from "@/lib/adminOrders";
+import { saveCustomerShippingDetails } from "@/lib/customerShipping";
 import { createEmailClient } from "@/lib/email";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 
@@ -55,8 +56,22 @@ export async function saveOrderQuote(formData: FormData) {
     );
   }
 
+  const order = await getAdminOrderById(orderId);
+  const customerShippingWarning = await saveCustomerShippingDetails(
+    order.customer_id,
+    shippingDetails
+  );
+
   revalidatePath(`/admin/orders/${orderId}`);
-  redirect(adminOrderPath(orderId, password, "Quote saved."));
+  redirect(
+    adminOrderPath(
+      orderId,
+      password,
+      customerShippingWarning
+        ? `Quote saved. ${customerShippingWarning}`
+        : "Quote saved."
+    )
+  );
 }
 
 export async function sendQuoteReplyEmail(formData: FormData) {
@@ -86,6 +101,7 @@ export async function sendQuoteReplyEmail(formData: FormData) {
 
   try {
     await persistQuote(orderId, quote);
+    await saveCustomerShippingDetails(order.customer_id, quote.shippingDetails);
   } catch (error) {
     console.warn("Quote save before email failed", {
       orderId,
