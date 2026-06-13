@@ -80,6 +80,14 @@ values
   ('Heel Plain Mesh', 'en', 'Heel Plain Mesh'),
   ('Upper Mesh Fabric', 'en', 'Upper Mesh Fabric'),
   ('Shoe Care Products', 'en', 'Shoe Care Products'),
+  ('Zipper Puller Hardware Accessories', 'en', 'Zipper Puller Hardware Accessories'),
+  ('Plastic Accessories', 'en', 'Plastic Accessories'),
+  ('Zipper Puller Hardware Accessories', 'zh', '拉头五金配件'),
+  ('Plastic Accessories', 'zh', '塑料配件'),
+  ('Zipper Puller Hardware Accessories', 'ko', '지퍼 풀러 금속 부자재'),
+  ('Plastic Accessories', 'ko', '플라스틱 부자재'),
+  ('Zipper Puller Hardware Accessories', 'ja', 'ジッパープラー金具部品'),
+  ('Plastic Accessories', 'ja', 'プラスチック部品'),
   ('Tools & Equipment', 'en', 'Tools & Equipment')
 on conflict (category_id, locale) do update
 set

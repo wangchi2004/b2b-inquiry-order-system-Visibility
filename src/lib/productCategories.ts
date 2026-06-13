@@ -49,6 +49,12 @@ export const PRODUCT_CATEGORY_TREE: ProductCategoryNode[] = [
     name: "Shoe Care Products"
   },
   {
+    name: "Zipper Puller Hardware Accessories"
+  },
+  {
+    name: "Plastic Accessories"
+  },
+  {
     name: "Tools & Equipment"
   }
 ];
