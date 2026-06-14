@@ -15,3 +15,6 @@ create index if not exists visitor_sessions_last_seen_at_idx
 
 create index if not exists visitor_sessions_locale_idx
   on public.visitor_sessions (locale);
+
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.visitor_sessions to service_role;
