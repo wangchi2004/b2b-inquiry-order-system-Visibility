@@ -77,6 +77,7 @@ values
   ('Shoe Repair Accessories', 'en', 'Shoe Repair Accessories'),
   ('Shoe Repair Mesh Fabric', 'en', 'Shoe Repair Mesh Fabric'),
   ('Heel Fish-Eye Mesh', 'en', 'Heel Fish-Eye Mesh'),
+  ('Heel Round-Eye Mesh', 'en', 'Heel Round-Eye Mesh'),
   ('Heel Plain Mesh', 'en', 'Heel Plain Mesh'),
   ('Upper Mesh Fabric', 'en', 'Upper Mesh Fabric'),
   ('Shoe Care Products', 'en', 'Shoe Care Products'),
@@ -84,10 +85,13 @@ values
   ('Plastic Accessories', 'en', 'Plastic Accessories'),
   ('Zipper Puller Hardware Accessories', 'zh', '拉头五金配件'),
   ('Plastic Accessories', 'zh', '塑料配件'),
+  ('Heel Round-Eye Mesh', 'zh', '圆眼后跟网布'),
   ('Zipper Puller Hardware Accessories', 'ko', '지퍼 풀러 금속 부자재'),
   ('Plastic Accessories', 'ko', '플라스틱 부자재'),
+  ('Heel Round-Eye Mesh', 'ko', '뒤꿈치 라운드 아이 메쉬'),
   ('Zipper Puller Hardware Accessories', 'ja', 'ジッパープラー金具部品'),
   ('Plastic Accessories', 'ja', 'プラスチック部品'),
+  ('Heel Round-Eye Mesh', 'ja', 'ヒール用丸目メッシュ'),
   ('Tools & Equipment', 'en', 'Tools & Equipment')
 on conflict (category_id, locale) do update
 set

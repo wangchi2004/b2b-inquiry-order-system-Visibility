@@ -39,6 +39,7 @@ export const PRODUCT_CATEGORY_TREE: ProductCategoryNode[] = [
         name: "Shoe Repair Mesh Fabric",
         children: [
           { name: "Heel Fish-Eye Mesh" },
+          { name: "Heel Round-Eye Mesh" },
           { name: "Heel Plain Mesh" },
           { name: "Upper Mesh Fabric" }
         ]
