@@ -41,7 +41,12 @@ export const PRODUCT_CATEGORY_TREE: ProductCategoryNode[] = [
           { name: "Heel Fish-Eye Mesh" },
           { name: "Heel Round-Eye Mesh" },
           { name: "Heel Plain Mesh" },
-          { name: "Upper Mesh Fabric" },
+          {
+            name: "Upper Mesh Fabric",
+            children: [
+              { name: "Diamond Lattice" }
+            ]
+          },
           { name: "Terry Cloth Fabric" }
         ]
       }
