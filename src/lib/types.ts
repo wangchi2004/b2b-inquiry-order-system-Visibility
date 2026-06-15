@@ -89,6 +89,7 @@ export type OrderItem = {
   color: string | null;
   quantity: number;
   unit: string | null;
+  unit_price?: number | null;
   created_at: string;
 };
 

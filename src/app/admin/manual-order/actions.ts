@@ -14,6 +14,7 @@ type ManualOrderItem = {
   size: string | null;
   color: string | null;
   unit: string | null;
+  unitPrice: number | null;
   quantity: number;
 };
 
@@ -81,7 +82,8 @@ export async function createManualOrder(formData: FormData) {
       size: item.size,
       color: item.color,
       quantity: item.quantity,
-      unit: item.unit
+      unit: item.unit,
+      unit_price: item.unitPrice
     }))
   );
 
@@ -252,6 +254,7 @@ function normalizeManualOrderItem(item: unknown): ManualOrderItem | null {
     size: readUnknownNullableString(record.size),
     color: readUnknownNullableString(record.color),
     unit: readUnknownNullableString(record.unit),
+    unitPrice: readUnknownMoney(record.unitPrice),
     quantity: Math.floor(quantity)
   };
 }
@@ -298,6 +301,12 @@ function readUnknownNullableString(value: unknown) {
   const text = readUnknownString(value);
 
   return text || null;
+}
+
+function readUnknownMoney(value: unknown) {
+  const parsedValue = typeof value === "number" ? value : Number(value);
+
+  return Number.isFinite(parsedValue) ? Number(parsedValue.toFixed(2)) : null;
 }
 
 function readMoney(value: FormDataEntryValue | null) {

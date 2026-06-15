@@ -110,6 +110,7 @@ create table if not exists order_items (
   color text,
   quantity integer not null check (quantity > 0),
   unit text,
+  unit_price numeric(12, 2),
   created_at timestamptz not null default now()
 );
 

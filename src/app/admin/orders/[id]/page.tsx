@@ -3,7 +3,7 @@ import { AdminOrderProductDetails } from "@/components/AdminOrderProductDetails"
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
 import { type AdminOrderItem, getAdminOrderById } from "@/lib/adminOrders";
-import { saveOrderQuote, sendQuoteReplyEmail } from "./actions";
+import { saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
 
 type AdminOrderDetailPageProps = {
   params: Promise<{
@@ -128,6 +128,7 @@ export default async function AdminOrderDetailPage({
               shippingNote: order.shipping_note,
               quoteUpdatedAt: order.quote_updated_at
             }}
+            saveItemsAction={saveOrderItems}
             saveAction={saveOrderQuote}
             sendEmailAction={sendQuoteReplyEmail}
           />

@@ -56,6 +56,7 @@ create table if not exists order_items (
   color text,
   quantity integer not null check (quantity > 0),
   unit text,
+  unit_price numeric(12, 2),
   created_at timestamptz not null default now()
 );
 
@@ -85,4 +86,4 @@ grant usage on schema public to anon, authenticated, service_role;
 grant select, insert, update on customers to service_role;
 grant select, insert, update on order_links to service_role;
 grant select, insert, update, delete on orders to service_role;
-grant select, insert on order_items to service_role;
+grant select, insert, update, delete on order_items to service_role;

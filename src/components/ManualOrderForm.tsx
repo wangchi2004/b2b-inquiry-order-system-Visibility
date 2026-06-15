@@ -320,6 +320,7 @@ function buildPayloadItems(
         size: variant.size,
         color: variant.color,
         unit: variant.unit,
+        unitPrice: variant.price,
         quantity: row.quantity
       };
     })

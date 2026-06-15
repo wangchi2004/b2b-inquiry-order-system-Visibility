@@ -49,6 +49,7 @@ export type AdminOrderItem = {
   color: string | null;
   quantity: number;
   unit: string | null;
+  unit_price: number | null;
   product_variants: {
     price: number | null;
   } | null;
@@ -126,6 +127,7 @@ export async function getAdminOrderById(id: string) {
           color,
           quantity,
           unit,
+          unit_price,
           product_variants(price),
           products(image_url,image_url_2,image_url_3)
         )
@@ -135,7 +137,7 @@ export async function getAdminOrderById(id: string) {
     .single<AdminOrderDetailRow>();
 
   if (error?.code === "42703" || error?.message.includes("does not exist")) {
-    return getAdminOrderByIdWithoutQuoteFields(id);
+    return getAdminOrderByIdWithoutOptionalFields(id);
   }
 
   if (error) {
@@ -145,7 +147,7 @@ export async function getAdminOrderById(id: string) {
   return normalizeAdminOrderDetail(data);
 }
 
-async function getAdminOrderByIdWithoutQuoteFields(id: string) {
+async function getAdminOrderByIdWithoutOptionalFields(id: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("orders")
@@ -210,6 +212,7 @@ function normalizeAdminOrderDetail(data: AdminOrderDetailRow) {
     customers: Array.isArray(data.customers) ? data.customers[0] ?? null : data.customers,
     order_items: data.order_items.map((item) => ({
       ...item,
+      unit_price: "unit_price" in item ? item.unit_price : null,
       product_variants: Array.isArray(item.product_variants)
         ? item.product_variants[0] ?? null
         : item.product_variants,

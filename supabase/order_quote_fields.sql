@@ -15,4 +15,8 @@ alter table orders
   add column if not exists shipping_note text,
   add column if not exists quote_updated_at timestamptz;
 
+alter table order_items
+  add column if not exists unit_price numeric(12, 2);
+
 grant select, update on orders to service_role;
+grant select, insert, update, delete on order_items to service_role;

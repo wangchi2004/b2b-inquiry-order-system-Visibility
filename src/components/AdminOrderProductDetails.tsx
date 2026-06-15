@@ -29,6 +29,7 @@ type AdminOrderProductDetailsProps = {
     shippingNote: string | null;
     quoteUpdatedAt: string | null;
   };
+  saveItemsAction?: (formData: FormData) => void | Promise<void>;
   saveAction?: (formData: FormData) => void | Promise<void>;
   sendEmailAction?: (formData: FormData) => void | Promise<void>;
 };
@@ -39,6 +40,7 @@ export function AdminOrderProductDetails({
   customerEmail,
   password,
   savedQuote,
+  saveItemsAction,
   saveAction,
   sendEmailAction
 }: AdminOrderProductDetailsProps) {
@@ -62,30 +64,32 @@ export function AdminOrderProductDetails({
   return (
     <div className="mt-4">
       <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
-            <tr>
-              <th className="w-28 border border-slate-200 px-3 py-2">Image</th>
-              <th className="border border-slate-200 px-3 py-2">Product</th>
-              <th className="border border-slate-200 px-3 py-2">SKU</th>
-              <th className="border border-slate-200 px-3 py-2">Size</th>
-              <th className="border border-slate-200 px-3 py-2">Color</th>
-              <th className="border border-slate-200 px-3 py-2 text-right">Quantity</th>
-              <th className="border border-slate-200 px-3 py-2">Unit</th>
-              <th className="border border-slate-200 px-3 py-2 text-right">Unit Price</th>
-              <th className="border border-slate-200 px-3 py-2 text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {groups.map((group) =>
-              group.items.map((item, index) => {
-                const unitPrice = getUnitPrice(item);
-                const lineTotal = unitPrice === null ? null : unitPrice * item.quantity;
+        <form action={saveItemsAction}>
+          {orderId ? <input type="hidden" name="order_id" value={orderId} /> : null}
+          {password ? <input type="hidden" name="password" value={password} /> : null}
+          <table className="min-w-full border-collapse text-sm">
+            <thead className="bg-slate-50 text-left text-slate-600">
+              <tr>
+                <th className="w-28 border border-slate-200 px-3 py-2">Image</th>
+                <th className="min-w-44 border border-slate-200 px-3 py-2">Product</th>
+                <th className="min-w-72 border border-slate-200 px-3 py-2">SKU</th>
+                <th className="min-w-28 border border-slate-200 px-3 py-2">Size</th>
+                <th className="min-w-28 border border-slate-200 px-3 py-2">Color</th>
+                <th className="min-w-24 border border-slate-200 px-3 py-2 text-right">Quantity</th>
+                <th className="min-w-24 border border-slate-200 px-3 py-2">Unit</th>
+                <th className="min-w-28 border border-slate-200 px-3 py-2 text-right">Unit Price</th>
+                <th className="border border-slate-200 px-3 py-2 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map((group) =>
+                group.items.map((item, index) => {
+                  const unitPrice = getUnitPrice(item);
+                  const lineTotal = unitPrice === null ? null : unitPrice * item.quantity;
 
-                return (
-                  <tr key={item.id} className="align-top">
-                    {index === 0 ? (
-                      <>
+                  return (
+                    <tr key={item.id} className="align-top">
+                      {index === 0 ? (
                         <td
                           rowSpan={group.items.length}
                           className="border border-slate-200 px-3 py-3"
@@ -105,44 +109,86 @@ export function AdminOrderProductDetails({
                             </div>
                           )}
                         </td>
-                        <td
-                          rowSpan={group.items.length}
-                          className="border border-slate-200 px-3 py-3 font-medium text-slate-950"
-                        >
-                          <div>{group.productName}</div>
-                          <div className="mt-2 text-xs font-normal text-slate-500">
-                            Total: {group.totalQuantity}
-                          </div>
-                        </td>
-                      </>
-                    ) : null}
-                    <td className="border border-slate-200 px-3 py-2 text-slate-700">
-                      {item.sku ?? "-"}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-slate-700">
-                      {item.size ?? "-"}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-slate-700">
-                      {item.color ?? "-"}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right text-slate-700">
-                      {item.quantity}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-slate-700">
-                      {item.unit ?? "-"}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right text-slate-700">
-                      {formatMoney(unitPrice)}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right font-medium text-slate-950">
-                      {formatMoney(lineTotal)}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                      ) : null}
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input type="hidden" name="item_id" value={item.id} />
+                        <input
+                          name={`item_product_name_${item.id}`}
+                          defaultValue={item.product_name}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-950 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_sku_${item.id}`}
+                          defaultValue={item.sku ?? ""}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_size_${item.id}`}
+                          defaultValue={item.size ?? ""}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_color_${item.id}`}
+                          defaultValue={item.color ?? ""}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_quantity_${item.id}`}
+                          type="number"
+                          min="1"
+                          step="1"
+                          defaultValue={item.quantity}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-right text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_unit_${item.id}`}
+                          defaultValue={item.unit ?? ""}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2">
+                        <input
+                          name={`item_unit_price_${item.id}`}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={unitPrice ?? ""}
+                          className="h-9 w-full rounded border border-slate-300 px-2 text-right text-slate-700 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="border border-slate-200 px-3 py-2 text-right font-medium text-slate-950">
+                        {formatMoney(lineTotal)}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+          {saveItemsAction ? (
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <p className="text-xs text-slate-500">
+                Edit product lines, then save before sending quote email.
+              </p>
+              <button
+                type="submit"
+                className="h-10 rounded bg-slate-950 px-4 text-sm font-semibold text-white"
+              >
+                Save Order Items / 保存订单明细
+              </button>
+            </div>
+          ) : null}
+        </form>
       </div>
 
       <div className="mt-5">
@@ -325,7 +371,7 @@ function calculateProductSubtotal(groups: AdminOrderProductGroup[]) {
 }
 
 function getUnitPrice(item: AdminOrderItem) {
-  return item.product_variants?.price ?? null;
+  return item.unit_price ?? item.product_variants?.price ?? null;
 }
 
 function parseMoneyInput(value: string) {

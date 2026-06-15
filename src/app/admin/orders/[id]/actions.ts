@@ -74,6 +74,90 @@ export async function saveOrderQuote(formData: FormData) {
   );
 }
 
+export async function saveOrderItems(formData: FormData) {
+  const password = readString(formData.get("password"));
+  const access = checkAdminAccess(password);
+
+  if (!access.ok) {
+    redirect("/admin/orders");
+  }
+
+  const orderId = readString(formData.get("order_id"));
+
+  if (!orderId) {
+    redirect(adminOrderPath(orderId, password, "Order ID is required."));
+  }
+
+  const itemUpdates = readOrderItemUpdates(formData);
+
+  if (itemUpdates.length === 0) {
+    redirect(adminOrderPath(orderId, password, "No order items to save."));
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  for (const item of itemUpdates) {
+    const { error } = await supabase
+      .from("order_items")
+      .update({
+        product_name: item.product_name,
+        sku: item.sku,
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_price: item.unit_price
+      })
+      .eq("id", item.id)
+      .eq("order_id", orderId);
+
+    if (error) {
+      redirect(
+        adminOrderPath(
+          orderId,
+          password,
+          error.code === "42703" || error.message.includes("schema cache")
+            ? "Order item price field is not in the database yet. Run supabase/order_item_edit_fields.sql first."
+            : error.message
+        )
+      );
+    }
+  }
+
+  const productSubtotal = itemUpdates.reduce(
+    (total, item) => total + (item.unit_price ?? 0) * item.quantity,
+    0
+  );
+  const order = await getAdminOrderById(orderId);
+  const shippingFee = order.shipping_fee ?? 0;
+  const grandTotal = productSubtotal + shippingFee;
+
+  try {
+    await persistQuote(orderId, {
+      productSubtotal,
+      shippingFee: order.shipping_fee,
+      grandTotal,
+      paypalFee: grandTotal * 0.05,
+      paypalCollection: grandTotal * 1.05,
+      shippingDetails: {
+        shipping_recipient_name: order.shipping_recipient_name,
+        shipping_phone: order.shipping_phone,
+        shipping_country: order.shipping_country,
+        shipping_address: order.shipping_address,
+        shipping_note: order.shipping_note
+      }
+    });
+  } catch (error) {
+    console.warn("Quote recalculation after item save failed", {
+      orderId,
+      error: error instanceof Error ? error.message : error
+    });
+  }
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  redirect(adminOrderPath(orderId, password, "Order items saved."));
+}
+
 export async function sendQuoteReplyEmail(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
@@ -306,7 +390,7 @@ function shippingRow(label: string, value: string | null) {
 function buildProductRows(group: QuoteProductGroup) {
   return group.items
     .map((item, index) => {
-      const unitPrice = item.product_variants?.price ?? null;
+      const unitPrice = item.unit_price ?? item.product_variants?.price ?? null;
       const lineTotal = unitPrice === null ? null : unitPrice * item.quantity;
 
       return `
@@ -399,6 +483,45 @@ function readShippingDetails(formData: FormData): ShippingDetails {
   };
 }
 
+type OrderItemUpdate = {
+  id: string;
+  product_name: string;
+  sku: string | null;
+  size: string | null;
+  color: string | null;
+  quantity: number;
+  unit: string | null;
+  unit_price: number | null;
+};
+
+function readOrderItemUpdates(formData: FormData): OrderItemUpdate[] {
+  const itemIds = formData.getAll("item_id").map((value) => readString(value));
+
+  return itemIds
+    .map((id) => {
+      if (!id) {
+        return null;
+      }
+
+      const quantity = Math.max(
+        1,
+        Math.floor(readNumber(formData.get(`item_quantity_${id}`)) ?? 1)
+      );
+
+      return {
+        id,
+        product_name: readString(formData.get(`item_product_name_${id}`)),
+        sku: readNullableString(formData.get(`item_sku_${id}`)),
+        size: readNullableString(formData.get(`item_size_${id}`)),
+        color: readNullableString(formData.get(`item_color_${id}`)),
+        quantity,
+        unit: readNullableString(formData.get(`item_unit_${id}`)),
+        unit_price: readMoney(formData.get(`item_unit_price_${id}`))
+      };
+    })
+    .filter((item): item is OrderItemUpdate => Boolean(item && item.product_name));
+}
+
 function readMoney(value: FormDataEntryValue | null) {
   const text = readString(value);
 
@@ -409,6 +532,18 @@ function readMoney(value: FormDataEntryValue | null) {
   const parsedValue = Number(text);
 
   return Number.isFinite(parsedValue) ? Number(parsedValue.toFixed(2)) : null;
+}
+
+function readNumber(value: FormDataEntryValue | null) {
+  const text = readString(value);
+
+  if (!text) {
+    return null;
+  }
+
+  const parsedValue = Number(text);
+
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 function formatMoney(value: number | null) {
