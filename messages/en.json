@@ -25,10 +25,19 @@
     "enterTitle": "Enter Product Page",
     "enterDescription": "Please fill in your email and country first. No account or password is required.",
     "enterButton": "Enter Product Page",
+    "viewSamples": "View Samples",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "United States",
     "emailError": "Please enter a valid email address.",
     "countryError": "Please enter your country."
+  },
+  "Samples": {
+    "eyebrow": "Product samples",
+    "title": "Sample Catalog",
+    "description": "Browse product images, descriptions, and specifications. This page is for sample viewing only and does not show prices.",
+    "specifications": "Specifications",
+    "unit": "Unit",
+    "sku": "SKU"
   },
   "Catalog": {
     "privateOrderLink": "Private order link",

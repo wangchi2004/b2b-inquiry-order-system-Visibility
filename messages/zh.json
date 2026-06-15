@@ -25,10 +25,19 @@
     "enterTitle": "进入产品页面",
     "enterDescription": "请先填写电子邮件和国家。不需要账号或密码。",
     "enterButton": "进入产品页面",
+    "viewSamples": "查看样本",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "美国",
     "emailError": "请输入有效的电子邮件地址。",
     "countryError": "请输入国家。"
+  },
+  "Samples": {
+    "eyebrow": "产品样本",
+    "title": "样本目录",
+    "description": "浏览产品图片、介绍和规格。此页面仅用于查看样本，不显示价格。",
+    "specifications": "规格",
+    "unit": "单位",
+    "sku": "SKU"
   },
   "Catalog": {
     "privateOrderLink": "专属订货链接",

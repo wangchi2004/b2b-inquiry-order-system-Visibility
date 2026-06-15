@@ -25,10 +25,19 @@
     "enterTitle": "商品ページへ",
     "enterDescription": "まずメールアドレスと国を入力してください。アカウントやパスワードは不要です。",
     "enterButton": "商品ページへ",
+    "viewSamples": "サンプルを見る",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "Japan",
     "emailError": "有効なメールアドレスを入力してください。",
     "countryError": "国を入力してください。"
+  },
+  "Samples": {
+    "eyebrow": "製品サンプル",
+    "title": "サンプルカタログ",
+    "description": "製品画像、説明、仕様を確認できます。このページはサンプル閲覧用で、価格は表示されません。",
+    "specifications": "仕様",
+    "unit": "単位",
+    "sku": "SKU"
   },
   "Catalog": {
     "privateOrderLink": "専用注文リンク",

@@ -6,6 +6,7 @@ import type { ProductWithVariants } from "@/lib/types";
 
 type ProductCardProps = {
   product: ProductWithVariants;
+  mode?: "order" | "sample";
   labels?: ProductCardLabels;
 };
 
@@ -14,6 +15,7 @@ export type ProductCardLabels = {
   viewDetails?: string;
   product?: string;
   color?: string;
+  size?: string;
   material?: string;
   moq?: string;
   sizeRange?: string;
@@ -22,11 +24,15 @@ export type ProductCardLabels = {
   selectQuantityBySize?: string;
   selected?: string;
   noVariants?: string;
+  specifications?: string;
+  sku?: string;
+  unit?: string;
+  stockStatus?: string;
   added?: string;
   enterQuantity?: string;
 };
 
-export function ProductCard({ product, labels }: ProductCardProps) {
+export function ProductCard({ product, mode = "order", labels }: ProductCardProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [addedMessage, setAddedMessage] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -183,20 +189,22 @@ export function ProductCard({ product, labels }: ProductCardProps) {
               </>
             ) : null}
           </div>
-          <div className="mt-3 inline-flex rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-            <span className="font-semibold text-slate-700">
-              {labels?.price ?? "Price"}:&nbsp;
-            </span>
-            <span
-              className={
-                priceSummary.hasPrice
-                  ? "font-semibold text-slate-950"
-                  : "font-semibold text-amber-700"
-              }
-            >
-              {priceSummary.label}
-            </span>
-          </div>
+          {mode === "order" ? (
+            <div className="mt-3 inline-flex rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <span className="font-semibold text-slate-700">
+                {labels?.price ?? "Price"}:&nbsp;
+              </span>
+              <span
+                className={
+                  priceSummary.hasPrice
+                    ? "font-semibold text-slate-950"
+                    : "font-semibold text-amber-700"
+                }
+              >
+                {priceSummary.label}
+              </span>
+            </div>
+          ) : null}
           {product.material ? (
             <p className="mt-3 text-sm text-slate-600">
               {labels?.material ?? "Material"}: {product.material}
@@ -209,82 +217,86 @@ export function ProductCard({ product, labels }: ProductCardProps) {
           ) : null}
         </div>
 
-        <div className="min-w-0 xl:self-stretch">
-          <h3 className="text-sm font-semibold text-slate-950">
-            {labels?.selectQuantityBySize?.replace("{unit}", unitLabel) ??
-              `Select Quantity (${unitLabel}) by Size`}
-          </h3>
-          {product.product_variants.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              {product.product_variants.map((variant) => {
-                const variantLabel = variant.size ?? variant.sku ?? "Option";
+        {mode === "sample" ? (
+          <SampleSpecifications product={product} labels={labels} />
+        ) : (
+          <div className="min-w-0 xl:self-stretch">
+            <h3 className="text-sm font-semibold text-slate-950">
+              {labels?.selectQuantityBySize?.replace("{unit}", unitLabel) ??
+                `Select Quantity (${unitLabel}) by Size`}
+            </h3>
+            {product.product_variants.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2.5">
+                {product.product_variants.map((variant) => {
+                  const variantLabel = variant.size ?? variant.sku ?? "Option";
 
-                return (
-                  <div
-                    key={variant.id}
-                    className="w-24 overflow-hidden rounded border border-slate-200"
-                  >
+                  return (
                     <div
-                      title={variantLabel}
-                      className="h-9 truncate border-b border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-sm font-semibold leading-6 text-slate-950"
+                      key={variant.id}
+                      className="w-24 overflow-hidden rounded border border-slate-200"
                     >
-                      {variantLabel}
-                    </div>
-                    <div className="grid h-7 grid-cols-[26px_1fr_26px]">
-                      <button
-                        type="button"
-                        onClick={() => adjustQuantity(variant.id, -1)}
-                        className="flex h-full items-center justify-center border-r border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
-                        aria-label={`Decrease ${variantLabel}`}
+                      <div
+                        title={variantLabel}
+                        className="h-9 truncate border-b border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-sm font-semibold leading-6 text-slate-950"
                       >
-                        -
-                      </button>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={quantities[variant.id] ?? 0}
-                        onChange={(event) => updateQuantity(variant.id, event.target.value)}
-                        className="flex h-full w-full items-center justify-center border-0 p-0 text-center text-sm leading-8 outline-none"
-                        aria-label={`Quantity for ${variantLabel}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => adjustQuantity(variant.id, 1)}
-                        className="flex h-full items-center justify-center border-l border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
-                        aria-label={`Increase ${variantLabel}`}
-                      >
-                        +
-                      </button>
+                        {variantLabel}
+                      </div>
+                      <div className="grid h-7 grid-cols-[26px_1fr_26px]">
+                        <button
+                          type="button"
+                          onClick={() => adjustQuantity(variant.id, -1)}
+                          className="flex h-full items-center justify-center border-r border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                          aria-label={`Decrease ${variantLabel}`}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={quantities[variant.id] ?? 0}
+                          onChange={(event) => updateQuantity(variant.id, event.target.value)}
+                          className="flex h-full w-full items-center justify-center border-0 p-0 text-center text-sm leading-8 outline-none"
+                          aria-label={`Quantity for ${variantLabel}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => adjustQuantity(variant.id, 1)}
+                          className="flex h-full items-center justify-center border-l border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                          aria-label={`Increase ${variantLabel}`}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-              {labels?.noVariants ?? "No variants available for this product."}
-            </p>
-          )}
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                {labels?.noVariants ?? "No variants available for this product."}
+              </p>
+            )}
 
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:mt-8">
-            <p className="text-sm text-slate-600">
-              {labels?.selected?.replace("{quantity}", String(selectedQuantity)) ??
-                `Selected: ${selectedQuantity}`}
-            </p>
-            <button
-              type="button"
-              onClick={addToCart}
-              disabled={product.product_variants.length === 0}
-              className="h-11 rounded bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {labels?.addToInquiryList ?? "Add to Inquiry Cart"}
-            </button>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:mt-8">
+              <p className="text-sm text-slate-600">
+                {labels?.selected?.replace("{quantity}", String(selectedQuantity)) ??
+                  `Selected: ${selectedQuantity}`}
+              </p>
+              <button
+                type="button"
+                onClick={addToCart}
+                disabled={product.product_variants.length === 0}
+                className="h-11 rounded bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {labels?.addToInquiryList ?? "Add to Inquiry Cart"}
+              </button>
+            </div>
+            {addedMessage ? (
+              <p className="mt-2 text-sm text-slate-600">{addedMessage}</p>
+            ) : null}
           </div>
-          {addedMessage ? (
-            <p className="mt-2 text-sm text-slate-600">{addedMessage}</p>
-          ) : null}
-        </div>
+        )}
       </div>
 
       {isPreviewOpen && activeImage ? (
@@ -327,6 +339,53 @@ export function ProductCard({ product, labels }: ProductCardProps) {
         </div>
       ) : null}
     </article>
+  );
+}
+
+function SampleSpecifications({
+  product,
+  labels
+}: {
+  product: ProductWithVariants;
+  labels?: ProductCardLabels;
+}) {
+  return (
+    <div className="min-w-0 xl:self-stretch">
+      <h3 className="text-sm font-semibold text-slate-950">
+        {labels?.specifications ?? "Specifications"}
+      </h3>
+      {product.product_variants.length > 0 ? (
+        <div className="mt-3 grid gap-2">
+          {product.product_variants.map((variant) => (
+            <div
+              key={variant.id}
+              className="grid gap-2 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:grid-cols-2"
+            >
+              <span>
+                <strong className="text-slate-950">{labels?.size ?? "Size"}:</strong>{" "}
+                {variant.size ?? "-"}
+              </span>
+              <span>
+                <strong className="text-slate-950">{labels?.color ?? "Color"}:</strong>{" "}
+                {variant.color ?? product.color ?? "-"}
+              </span>
+              <span>
+                <strong className="text-slate-950">{labels?.unit ?? "Unit"}:</strong>{" "}
+                {variant.unit ?? "-"}
+              </span>
+              <span>
+                <strong className="text-slate-950">{labels?.sku ?? "SKU"}:</strong>{" "}
+                {variant.sku ?? "-"}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+          {labels?.noVariants ?? "No variants available for this product."}
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 
@@ -69,6 +70,12 @@ export default async function LocalizedHomePage({
               </p>
             </div>
           </div>
+          <Link
+            href={`/${locale}/samples`}
+            className="mt-2 inline-flex h-11 w-fit items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+          >
+            {home("viewSamples")}
+          </Link>
         </div>
         <div>
           <h2 className="mb-3 text-xl font-semibold text-slate-950">

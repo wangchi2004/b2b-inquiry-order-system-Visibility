@@ -25,10 +25,19 @@
     "enterTitle": "제품 페이지로 이동",
     "enterDescription": "먼저 이메일과 국가를 입력해 주세요. 계정이나 비밀번호는 필요 없습니다.",
     "enterButton": "제품 페이지로 이동",
+    "viewSamples": "샘플 보기",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "South Korea",
     "emailError": "올바른 이메일 주소를 입력해 주세요.",
     "countryError": "국가를 입력해 주세요."
+  },
+  "Samples": {
+    "eyebrow": "제품 샘플",
+    "title": "샘플 카탈로그",
+    "description": "제품 이미지, 설명, 사양을 확인하세요. 이 페이지는 샘플 확인용이며 가격은 표시하지 않습니다.",
+    "specifications": "사양",
+    "unit": "단위",
+    "sku": "SKU"
   },
   "Catalog": {
     "privateOrderLink": "전용 주문 링크",

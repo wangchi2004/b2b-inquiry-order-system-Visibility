@@ -15,6 +15,7 @@ type ProductCatalogProps = {
   basePath: string;
   selectedCategory?: string;
   searchQuery?: string;
+  mode?: "order" | "sample";
   labels?: ProductCatalogLabels;
 };
 
@@ -36,6 +37,7 @@ export function ProductCatalog({
   basePath,
   selectedCategory = "all",
   searchQuery = "",
+  mode = "order",
   labels
 }: ProductCatalogProps) {
   const normalizedSearchQuery = searchQuery.trim();
@@ -136,6 +138,7 @@ export function ProductCatalog({
                       : undefined) ??
                     product.translated_category
                 }}
+                mode={mode}
                 labels={labels?.productCard}
               />
             ))}

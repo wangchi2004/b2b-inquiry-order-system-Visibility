@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -48,6 +49,12 @@ export default function HomePage() {
               </p>
             </div>
           </div>
+          <Link
+            href="/en/samples"
+            className="mt-2 inline-flex h-11 w-fit items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+          >
+            View Samples
+          </Link>
         </div>
         <div>
           <h2 className="mb-3 text-xl font-semibold text-slate-950">
