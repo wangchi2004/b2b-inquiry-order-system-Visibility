@@ -47,6 +47,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
   const productName = product.translated_name ?? product.name;
   const productDescription = product.translated_description ?? product.description;
   const productCategory = product.translated_category ?? product.category;
+  const isSampleMode = mode === "sample";
   const priceSummary = getPriceSummary(
     product,
     labels?.pricePending ?? "Price pending, contact sales"
@@ -117,10 +118,22 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
 
   return (
     <article className="rounded border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="grid gap-6 xl:grid-cols-[230px_280px_minmax(0,1fr)] xl:items-center 2xl:grid-cols-[260px_320px_minmax(0,1fr)]">
+      <div
+        className={
+          isSampleMode
+            ? "grid gap-6"
+            : "grid gap-6 xl:grid-cols-[230px_280px_minmax(0,1fr)] xl:items-center 2xl:grid-cols-[260px_320px_minmax(0,1fr)]"
+        }
+      >
         <div className="min-w-0">
           {activeImage ? (
-            <div className="relative mx-auto max-w-[220px]">
+            <div
+              className={
+                isSampleMode
+                  ? "relative mx-auto w-full max-w-5xl"
+                  : "relative mx-auto max-w-[220px]"
+              }
+            >
               <button
                 type="button"
                 onClick={() => setIsPreviewOpen(true)}
@@ -131,7 +144,11 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                 <img
                   src={activeImage}
                   alt={productName}
-                  className="aspect-[4/3] w-full rounded bg-slate-100 object-contain"
+                  className={
+                    isSampleMode
+                      ? "h-[320px] w-full rounded bg-slate-100 object-contain sm:h-[520px] lg:h-[640px]"
+                      : "aspect-[4/3] w-full rounded bg-slate-100 object-contain"
+                  }
                 />
               </button>
               {productImages.length > 1 ? (
@@ -156,7 +173,13 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
               ) : null}
             </div>
           ) : (
-            <div className="mx-auto flex aspect-[4/3] max-w-[220px] items-center justify-center rounded bg-slate-100 text-sm text-slate-400">
+            <div
+              className={
+                isSampleMode
+                  ? "mx-auto flex h-[320px] w-full max-w-5xl items-center justify-center rounded bg-slate-100 text-sm text-slate-400 sm:h-[520px] lg:h-[640px]"
+                  : "mx-auto flex aspect-[4/3] max-w-[220px] items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
+              }
+            >
               No image
             </div>
           )}
@@ -189,7 +212,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
               </>
             ) : null}
           </div>
-          {mode === "order" ? (
+          {!isSampleMode ? (
             <div className="mt-3 inline-flex rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
               <span className="font-semibold text-slate-700">
                 {labels?.price ?? "Price"}:&nbsp;
@@ -217,7 +240,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
           ) : null}
         </div>
 
-        {mode === "sample" ? (
+        {isSampleMode ? (
           <SampleSpecifications product={product} labels={labels} />
         ) : (
           <div className="min-w-0 xl:self-stretch">
