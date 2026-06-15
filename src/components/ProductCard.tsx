@@ -121,23 +121,29 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
       <div
         className={
           isSampleMode
-            ? "grid gap-6"
+            ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)] lg:grid-rows-[2fr_1fr] lg:items-stretch"
             : "grid gap-6 xl:grid-cols-[230px_280px_minmax(0,1fr)] xl:items-center 2xl:grid-cols-[260px_320px_minmax(0,1fr)]"
         }
       >
-        <div className="min-w-0">
+        <div
+          className={
+            isSampleMode
+              ? "flex min-w-0 flex-col lg:col-start-1 lg:row-start-1"
+              : "min-w-0"
+          }
+        >
           {activeImage ? (
             <div
               className={
                 isSampleMode
-                  ? "relative mx-auto w-full max-w-5xl"
+                  ? "relative mx-auto min-h-[360px] w-full flex-1"
                   : "relative mx-auto max-w-[220px]"
               }
             >
               <button
                 type="button"
                 onClick={() => setIsPreviewOpen(true)}
-                className="block w-full"
+                className={isSampleMode ? "block h-full w-full" : "block w-full"}
                 aria-label={`Open large image for ${productName}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -146,7 +152,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                   alt={productName}
                   className={
                     isSampleMode
-                      ? "h-[320px] w-full rounded bg-slate-100 object-contain sm:h-[520px] lg:h-[640px]"
+                      ? "h-full min-h-[360px] w-full rounded bg-slate-100 object-contain"
                       : "aspect-[4/3] w-full rounded bg-slate-100 object-contain"
                   }
                 />
@@ -176,7 +182,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div
               className={
                 isSampleMode
-                  ? "mx-auto flex h-[320px] w-full max-w-5xl items-center justify-center rounded bg-slate-100 text-sm text-slate-400 sm:h-[520px] lg:h-[640px]"
+                  ? "mx-auto flex min-h-[360px] w-full flex-1 items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
                   : "mx-auto flex aspect-[4/3] max-w-[220px] items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
               }
             >
@@ -194,7 +200,13 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
           </button>
         </div>
 
-        <div className="min-w-0">
+        <div
+          className={
+            isSampleMode
+              ? "min-w-0 rounded border border-slate-200 bg-slate-50 p-4 lg:col-start-1 lg:row-start-2"
+              : "min-w-0"
+          }
+        >
           <p className="text-sm text-slate-500">
             {productCategory ?? labels?.product ?? "Product"}
           </p>
@@ -373,7 +385,7 @@ function SampleSpecifications({
   labels?: ProductCardLabels;
 }) {
   return (
-    <div className="min-w-0 xl:self-stretch">
+    <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:self-stretch">
       <h3 className="text-sm font-semibold text-slate-950">
         {labels?.specifications ?? "Specifications"}
       </h3>
@@ -382,7 +394,7 @@ function SampleSpecifications({
           {product.product_variants.map((variant) => (
             <div
               key={variant.id}
-              className="grid gap-2 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:grid-cols-2"
+              className="grid gap-2 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:grid-cols-3"
             >
               <span>
                 <strong className="text-slate-950">{labels?.size ?? "Size"}:</strong>{" "}
@@ -395,10 +407,6 @@ function SampleSpecifications({
               <span>
                 <strong className="text-slate-950">{labels?.unit ?? "Unit"}:</strong>{" "}
                 {variant.unit ?? "-"}
-              </span>
-              <span>
-                <strong className="text-slate-950">{labels?.sku ?? "SKU"}:</strong>{" "}
-                {variant.sku ?? "-"}
               </span>
             </div>
           ))}
