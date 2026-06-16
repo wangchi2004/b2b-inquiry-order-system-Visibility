@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { ProductCatalog } from "@/components/ProductCatalog";
+import { SampleAnalyticsRecorder } from "@/components/SampleAnalyticsRecorder";
 import { getActiveProductsWithVariants } from "@/lib/products";
 
 type SamplePageProps = {
@@ -16,6 +17,7 @@ export default async function SamplePage({ searchParams }: SamplePageProps) {
 
   return (
     <main className="min-h-screen">
+      <SampleAnalyticsRecorder locale="en" />
       <Header />
       <section className="mx-auto max-w-[1600px] px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

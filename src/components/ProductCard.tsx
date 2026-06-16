@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { addCartItems, setCartLocale, setContinueShoppingPath } from "@/lib/cart";
+import { recordSampleAnalytics } from "@/lib/sampleAnalytics";
 import type { ProductWithVariants } from "@/lib/types";
 
 type ProductCardProps = {
@@ -116,6 +117,18 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
     );
   }
 
+  function openPreview(trackViewDetails = false) {
+    if (trackViewDetails && isSampleMode) {
+      recordSampleAnalytics({
+        eventName: "view_details",
+        productId: product.id,
+        productName
+      });
+    }
+
+    setIsPreviewOpen(true);
+  }
+
   return (
     <article className="rounded border border-slate-200 bg-white p-5 shadow-sm">
       <div
@@ -142,7 +155,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             >
               <button
                 type="button"
-                onClick={() => setIsPreviewOpen(true)}
+                onClick={() => openPreview()}
                 className={isSampleMode ? "block h-full w-full" : "block w-full"}
                 aria-label={`Open large image for ${productName}`}
               >
@@ -192,7 +205,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
 
           <button
             type="button"
-            onClick={() => setIsPreviewOpen(true)}
+            onClick={() => openPreview(true)}
             disabled={!activeImage}
             className="mt-4 h-10 w-full rounded border border-slate-300 text-sm font-semibold text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
           >

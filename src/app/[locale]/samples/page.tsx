@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/Header";
 import { LocaleSessionSync } from "@/components/LocaleSessionSync";
 import { ProductCatalog } from "@/components/ProductCatalog";
+import { SampleAnalyticsRecorder } from "@/components/SampleAnalyticsRecorder";
 import { getActiveProductsWithVariants } from "@/lib/products";
 
 type LocalizedSamplePageProps = {
@@ -30,6 +31,7 @@ export default async function LocalizedSamplePage({
   return (
     <main className="min-h-screen">
       <LocaleSessionSync locale={locale} />
+      <SampleAnalyticsRecorder locale={locale} />
       <Header
         homeHref={`/${locale}`}
         cartHref={`/${locale}/cart`}
