@@ -67,6 +67,11 @@ export async function POST(request: Request) {
         throw updateError;
       }
 
+      await upsertCustomerFromVisitor({
+        email,
+        country
+      });
+
       return NextResponse.json({ ok: true });
     }
 
@@ -83,6 +88,11 @@ export async function POST(request: Request) {
       throw insertError;
     }
 
+    await upsertCustomerFromVisitor({
+      email,
+      country
+    });
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to record visitor session", error);
@@ -90,6 +100,51 @@ export async function POST(request: Request) {
       { message: "Failed to record visitor session." },
       { status: 500 }
     );
+  }
+}
+
+async function upsertCustomerFromVisitor({
+  email,
+  country
+}: {
+  email: string;
+  country: string | undefined;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const { data: existingCustomer, error: findError } = await supabase
+    .from("customers")
+    .select("id,name")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (findError) {
+    console.warn("Failed to look up customer from visitor login", findError);
+    return;
+  }
+
+  if (existingCustomer) {
+    const { error: updateError } = await supabase
+      .from("customers")
+      .update({
+        country: country ?? null
+      })
+      .eq("id", existingCustomer.id);
+
+    if (updateError) {
+      console.warn("Failed to update customer from visitor login", updateError);
+    }
+
+    return;
+  }
+
+  const { error: insertError } = await supabase.from("customers").insert({
+    email,
+    country: country ?? null,
+    name: email
+  });
+
+  if (insertError) {
+    console.warn("Failed to create customer from visitor login", insertError);
   }
 }
 

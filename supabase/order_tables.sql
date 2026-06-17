@@ -13,6 +13,7 @@ create table if not exists customers (
   name text not null,
   email text not null unique,
   country text,
+  phone text,
   whatsapp text,
   company text,
   shipping_recipient_name text,
@@ -20,8 +21,38 @@ create table if not exists customers (
   shipping_country text,
   shipping_address text,
   shipping_note text,
+  customer_note text,
+  instagram text,
+  website text,
+  shop_name text,
+  city text,
+  business_type text,
+  source text,
+  source_url text,
+  status text not null default 'prospecting',
+  stage text,
+  score integer not null default 0,
+  owner text,
+  last_contacted_at date,
+  email_valid boolean not null default true,
+  unsubscribed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists customer_tags (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid not null references customers(id) on delete cascade,
+  tag text not null,
+  created_at timestamptz not null default now(),
+  unique (customer_id, tag)
+);
+
+create table if not exists suppression_list (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  reason text not null,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists order_links (
@@ -69,6 +100,15 @@ create index if not exists idx_orders_customer_id
 create index if not exists idx_orders_customer_email
   on orders(customer_email);
 
+create index if not exists idx_customers_status
+  on customers(status);
+
+create index if not exists idx_customers_score
+  on customers(score);
+
+create index if not exists idx_customer_tags_customer_id
+  on customer_tags(customer_id);
+
 create index if not exists idx_order_items_order_id
   on order_items(order_id);
 
@@ -83,7 +123,9 @@ before update on orders
 for each row execute function set_updated_at();
 
 grant usage on schema public to anon, authenticated, service_role;
-grant select, insert, update on customers to service_role;
-grant select, insert, update on order_links to service_role;
+grant select, insert, update, delete on customers to service_role;
+grant select, insert, update, delete on customer_tags to service_role;
+grant select, insert, update, delete on suppression_list to service_role;
+grant select, insert, update, delete on order_links to service_role;
 grant select, insert, update, delete on orders to service_role;
 grant select, insert, update, delete on order_items to service_role;

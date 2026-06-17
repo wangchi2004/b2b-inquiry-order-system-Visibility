@@ -26,6 +26,9 @@
     "enterDescription": "まずメールアドレスと国を入力してください。アカウントやパスワードは不要です。",
     "enterButton": "商品ページへ",
     "viewSamples": "サンプルを見る",
+    "photoWallTitle": "フォトウォール",
+    "photoWallDescription": "写真をクリックすると大きく表示できます。",
+    "photoWallClose": "閉じる",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "Japan",
     "emailError": "有効なメールアドレスを入力してください。",
@@ -34,7 +37,7 @@
   "Samples": {
     "eyebrow": "製品サンプル",
     "title": "サンプルカタログ",
-    "description": "製品画像、説明、仕様を確認できます。このページはサンプル閲覧用で、価格は表示されません。",
+    "description": "製品画像のみ確認できます。このページはサンプル閲覧用で、価格、製品説明、仕様は表示されません。",
     "specifications": "仕様",
     "unit": "単位",
     "sku": "SKU"

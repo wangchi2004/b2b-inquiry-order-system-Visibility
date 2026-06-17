@@ -93,6 +93,10 @@ export function categoryMatchesSelection(
 
   const normalizedProductCategory = normalizeProductCategory(productCategory);
 
+  if (selectedCategory === "Uncategorized") {
+    return !normalizedProductCategory;
+  }
+
   if (normalizedProductCategory === selectedCategory) {
     return true;
   }

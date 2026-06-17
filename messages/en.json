@@ -26,6 +26,9 @@
     "enterDescription": "Please fill in your email and country first. No account or password is required.",
     "enterButton": "Enter Product Page",
     "viewSamples": "View Samples",
+    "photoWallTitle": "Photo Wall",
+    "photoWallDescription": "Click any photo to view it larger.",
+    "photoWallClose": "Close",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "United States",
     "emailError": "Please enter a valid email address.",
@@ -34,7 +37,7 @@
   "Samples": {
     "eyebrow": "Product samples",
     "title": "Sample Catalog",
-    "description": "Browse product images, descriptions, and specifications. This page is for sample viewing only and does not show prices.",
+    "description": "Browse product images. This page is for sample viewing only and does not show prices, product descriptions, or specifications.",
     "specifications": "Specifications",
     "unit": "Unit",
     "sku": "SKU"

@@ -134,14 +134,14 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
       <div
         className={
           isSampleMode
-            ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)] lg:grid-rows-[2fr_1fr] lg:items-stretch"
+            ? "grid gap-4"
             : "grid gap-6 xl:grid-cols-[230px_280px_minmax(0,1fr)] xl:items-center 2xl:grid-cols-[260px_320px_minmax(0,1fr)]"
         }
       >
         <div
           className={
             isSampleMode
-              ? "flex min-w-0 flex-col lg:col-start-1 lg:row-start-1"
+              ? "flex min-w-0 flex-col"
               : "min-w-0"
           }
         >
@@ -149,7 +149,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div
               className={
                 isSampleMode
-                  ? "relative mx-auto min-h-[360px] w-full flex-1"
+                  ? "relative mx-auto min-h-[520px] w-full flex-1"
                   : "relative mx-auto max-w-[220px]"
               }
             >
@@ -165,7 +165,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                   alt={productName}
                   className={
                     isSampleMode
-                      ? "h-full min-h-[360px] w-full rounded bg-slate-100 object-contain"
+                      ? "h-full min-h-[520px] w-full rounded bg-slate-100 object-contain"
                       : "aspect-[4/3] w-full rounded bg-slate-100 object-contain"
                   }
                 />
@@ -195,7 +195,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div
               className={
                 isSampleMode
-                  ? "mx-auto flex min-h-[360px] w-full flex-1 items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
+                  ? "mx-auto flex min-h-[520px] w-full flex-1 items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
                   : "mx-auto flex aspect-[4/3] max-w-[220px] items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
               }
             >
@@ -213,31 +213,25 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
           </button>
         </div>
 
-        <div
-          className={
-            isSampleMode
-              ? "min-w-0 rounded border border-slate-200 bg-slate-50 p-4 lg:col-start-1 lg:row-start-2"
-              : "min-w-0"
-          }
-        >
-          <p className="text-sm text-slate-500">
-            {productCategory ?? labels?.product ?? "Product"}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            {productName}
-          </h2>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-700">
-            <span>{labels?.color ?? "Color"}: {product.color ?? "Custom"}</span>
-            <span className="hidden text-slate-300 sm:inline">|</span>
-            <span>{labels?.moq ?? "MOQ"}: 1 {unitLabel}</span>
-            {sizeRange ? (
-              <>
-                <span className="hidden text-slate-300 sm:inline">|</span>
-                <span>{labels?.sizeRange ?? "Size Range"}: {sizeRange}</span>
-              </>
-            ) : null}
-          </div>
-          {!isSampleMode ? (
+        {!isSampleMode ? (
+          <div className="min-w-0">
+            <p className="text-sm text-slate-500">
+              {productCategory ?? labels?.product ?? "Product"}
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+              {productName}
+            </h2>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-700">
+              <span>{labels?.color ?? "Color"}: {product.color ?? "Custom"}</span>
+              <span className="hidden text-slate-300 sm:inline">|</span>
+              <span>{labels?.moq ?? "MOQ"}: 1 {unitLabel}</span>
+              {sizeRange ? (
+                <>
+                  <span className="hidden text-slate-300 sm:inline">|</span>
+                  <span>{labels?.sizeRange ?? "Size Range"}: {sizeRange}</span>
+                </>
+              ) : null}
+            </div>
             <div className="mt-3 inline-flex rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
               <span className="font-semibold text-slate-700">
                 {labels?.price ?? "Price"}:&nbsp;
@@ -252,22 +246,20 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                 {priceSummary.label}
               </span>
             </div>
-          ) : null}
-          {product.material ? (
-            <p className="mt-3 text-sm text-slate-600">
-              {labels?.material ?? "Material"}: {product.material}
-            </p>
-          ) : null}
-          {productDescription ? (
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              {productDescription}
-            </p>
-          ) : null}
-        </div>
+            {product.material ? (
+              <p className="mt-3 text-sm text-slate-600">
+                {labels?.material ?? "Material"}: {product.material}
+              </p>
+            ) : null}
+            {productDescription ? (
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                {productDescription}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
-        {isSampleMode ? (
-          <SampleSpecifications product={product} labels={labels} />
-        ) : (
+        {!isSampleMode ? (
           <div className="min-w-0 xl:self-stretch">
             <h3 className="text-sm font-semibold text-slate-950">
               {labels?.selectQuantityBySize?.replace("{unit}", unitLabel) ??
@@ -344,7 +336,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
               <p className="mt-2 text-sm text-slate-600">{addedMessage}</p>
             ) : null}
           </div>
-        )}
+        ) : null}
       </div>
 
       {isPreviewOpen && activeImage ? (
@@ -387,49 +379,6 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
         </div>
       ) : null}
     </article>
-  );
-}
-
-function SampleSpecifications({
-  product,
-  labels
-}: {
-  product: ProductWithVariants;
-  labels?: ProductCardLabels;
-}) {
-  return (
-    <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:self-stretch">
-      <h3 className="text-sm font-semibold text-slate-950">
-        {labels?.specifications ?? "Specifications"}
-      </h3>
-      {product.product_variants.length > 0 ? (
-        <div className="mt-3 grid gap-2">
-          {product.product_variants.map((variant) => (
-            <div
-              key={variant.id}
-              className="grid gap-2 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 sm:grid-cols-3"
-            >
-              <span>
-                <strong className="text-slate-950">{labels?.size ?? "Size"}:</strong>{" "}
-                {variant.size ?? "-"}
-              </span>
-              <span>
-                <strong className="text-slate-950">{labels?.color ?? "Color"}:</strong>{" "}
-                {variant.color ?? product.color ?? "-"}
-              </span>
-              <span>
-                <strong className="text-slate-950">{labels?.unit ?? "Unit"}:</strong>{" "}
-                {variant.unit ?? "-"}
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-          {labels?.noVariants ?? "No variants available for this product."}
-        </p>
-      )}
-    </div>
   );
 }
 

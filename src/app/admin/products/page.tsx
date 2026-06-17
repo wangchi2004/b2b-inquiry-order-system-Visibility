@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BulkVariantSaveButton } from "@/components/BulkVariantSaveButton";
 import { Header } from "@/components/Header";
 import { ProductImageUploadCard } from "@/components/ProductImageUploadCard";
 import { checkAdminAccess } from "@/lib/admin";
@@ -19,6 +20,7 @@ import {
   deleteProductVariant,
   saveProduct,
   saveProductVariant,
+  saveProductVariantsBulk,
   toggleProductStatus
 } from "./actions";
 
@@ -58,13 +60,14 @@ type AdminProductsPageProps = {
     password?: string;
     message?: string;
     category?: string;
+    product?: string;
   }>;
 };
 
 export default async function AdminProductsPage({
   searchParams
 }: AdminProductsPageProps) {
-  const { password, message, category } = await searchParams;
+  const { password, message, category, product: selectedProductId } = await searchParams;
   const access = checkAdminAccess(password);
 
   if (!access.ok) {
@@ -80,6 +83,9 @@ export default async function AdminProductsPage({
       : products.filter((product) =>
           categoryMatchesSelection(product.category, selectedCategory)
         );
+  const selectedProduct = selectedProductId
+    ? products.find((product) => product.id === selectedProductId)
+    : null;
 
   return (
     <main className="min-h-screen">
@@ -170,13 +176,24 @@ export default async function AdminProductsPage({
                   </strong>{" "}
                   ({filteredProducts.length})
                 </div>
-                {filteredProducts.map((product) => (
+                {selectedProduct ? (
                   <ProductAdminPanel
-                    key={product.id}
                     password={access.password}
-                    product={product}
+                    product={selectedProduct}
+                    selectedCategory={selectedCategory}
                   />
-                ))}
+                ) : (
+                  <div className="grid gap-2">
+                    {filteredProducts.map((product) => (
+                      <ProductListRow
+                        key={product.id}
+                        password={access.password}
+                        product={product}
+                        selectedCategory={selectedCategory}
+                      />
+                    ))}
+                  </div>
+                )}
                 {filteredProducts.length === 0 ? (
                   <div className="rounded border border-slate-200 bg-white p-8 text-center">
                     <h2 className="text-lg font-semibold text-slate-950">
@@ -301,26 +318,97 @@ function adminProductsHref(password: string, category?: string) {
     password
   });
 
-  if (category) {
+  if (category && category !== "all") {
     params.set("category", category);
   }
 
   return `/admin/products?${params.toString()}`;
 }
 
-function ProductAdminPanel({
+function adminProductEditHref(password: string, productId: string, category?: string) {
+  const params = new URLSearchParams({
+    password,
+    product: productId
+  });
+
+  if (category && category !== "all") {
+    params.set("category", category);
+  }
+
+  return `/admin/products?${params.toString()}`;
+}
+
+function ProductListRow({
   password,
-  product
+  product,
+  selectedCategory
 }: {
   password: string;
   product: ProductWithVariants;
+  selectedCategory: string;
+}) {
+  const imageUrl = product.image_url || product.image_url_2 || product.image_url_3;
+
+  return (
+    <article className="grid gap-3 rounded border border-slate-200 bg-white p-3 text-sm md:grid-cols-[72px_minmax(0,1fr)_auto] md:items-center">
+      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <span className="text-[11px] text-slate-400">No image</span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="truncate text-base font-semibold text-slate-950">{product.name}</h2>
+          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700">
+            {product.status}
+          </span>
+        </div>
+        <p className="mt-0.5 text-xs text-slate-600">{product.slug}</p>
+        <p className="mt-1 text-xs text-slate-500">
+          {product.category || "Uncategorized"} · {product.product_variants.length} specifications / 规格
+        </p>
+      </div>
+      <Link
+        href={adminProductEditHref(password, product.id, selectedCategory)}
+        className="inline-flex h-9 items-center justify-center rounded bg-slate-950 px-4 text-sm font-semibold text-white"
+      >
+        Edit / 编辑
+      </Link>
+    </article>
+  );
+}
+
+function ProductAdminPanel({
+  password,
+  product,
+  selectedCategory
+}: {
+  password: string;
+  product: ProductWithVariants;
+  selectedCategory: string;
 }) {
   const nextStatus = product.status === "active" ? "inactive" : "active";
+  const bulkFormId = `save-all-variants-${product.id}`;
 
   return (
     <article className="rounded border border-slate-200 bg-white p-3">
       <div className="flex flex-col gap-2 border-b border-slate-200 pb-3 md:flex-row md:items-start md:justify-between">
         <div>
+          <Link
+            href={adminProductsHref(password, selectedCategory)}
+            className="mb-2 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-900"
+          >
+            Back to product list / 返回产品列表
+          </Link>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-base font-semibold text-slate-950">{product.name}</h2>
             <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700">
@@ -334,6 +422,8 @@ function ProductAdminPanel({
             <input type="hidden" name="password" value={password} />
             <input type="hidden" name="product_id" value={product.id} />
             <input type="hidden" name="status" value={nextStatus} />
+            <input type="hidden" name="return_category" value={selectedCategory} />
+            <input type="hidden" name="return_product" value={product.id} />
             <button
               type="submit"
               className="h-8 rounded border border-slate-300 px-2.5 text-xs font-semibold text-slate-800"
@@ -344,6 +434,7 @@ function ProductAdminPanel({
           <form action={deleteProduct}>
             <input type="hidden" name="password" value={password} />
             <input type="hidden" name="product_id" value={product.id} />
+            <input type="hidden" name="return_category" value={selectedCategory} />
             <button
               type="submit"
               className="h-8 rounded border border-red-300 px-2.5 text-xs font-semibold text-red-700"
@@ -357,13 +448,26 @@ function ProductAdminPanel({
       <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(360px,0.42fr)_minmax(0,0.58fr)]">
         <section className="rounded border border-slate-200 bg-slate-50 p-2.5">
           <h3 className="text-sm font-semibold text-slate-950">Edit Product / 编辑产品</h3>
-          <ProductForm password={password} product={product} />
+          <ProductForm
+            password={password}
+            product={product}
+            selectedCategory={selectedCategory}
+          />
         </section>
 
         <section className="min-w-0">
           <h3 className="text-sm font-semibold text-slate-950">Specifications / 产品规格</h3>
           <div className="mt-2 overflow-x-auto rounded border border-slate-200">
-            <table className="min-w-[760px] border-collapse text-[11px]">
+            <table className="min-w-[720px] table-fixed border-collapse text-[11px]">
+              <colgroup>
+                <col className="w-32" />
+                <col className="w-36" />
+                <col className="w-28" />
+                <col className="w-20" />
+                <col className="w-20" />
+                <col className="w-32" />
+                <col className="w-24" />
+              </colgroup>
               <thead className="bg-slate-50 text-left text-slate-600">
                 <tr>
                   <th className="border border-slate-200 px-1.5 py-1">sku / 规格编码</th>
@@ -388,12 +492,14 @@ function ProductAdminPanel({
                 ) : (
                   product.product_variants.map((variant) => (
                     <tr key={variant.id} className="align-top">
-                      <td className="border border-slate-200 px-1.5 py-1 font-medium text-slate-950">
+                      <td className="break-words border border-slate-200 px-1.5 py-1 font-medium leading-snug text-slate-950">
                         <form id={`save-variant-${variant.id}`} action={saveProductVariant}>
                           <input type="hidden" name="password" value={password} />
                           <input type="hidden" name="product_id" value={product.id} />
                           <input type="hidden" name="product_slug" value={product.slug} />
                           <input type="hidden" name="variant_id" value={variant.id} />
+                          <input type="hidden" name="return_category" value={selectedCategory} />
+                          <input type="hidden" name="return_product" value={product.id} />
                         </form>
                         {variant.sku}
                       </td>
@@ -402,7 +508,9 @@ function ProductAdminPanel({
                           form={`save-variant-${variant.id}`}
                           name="size"
                           defaultValue={variant.size ?? ""}
-                          className="h-7 w-14 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
+                          data-bulk-variant-id={variant.id}
+                          data-bulk-variant-field="size"
+                          className="h-7 w-32 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
                         />
                       </td>
                       <td className="border border-slate-200 px-1 py-1 text-slate-700">
@@ -410,6 +518,8 @@ function ProductAdminPanel({
                           form={`save-variant-${variant.id}`}
                           name="color"
                           defaultValue={variant.color ?? ""}
+                          bulkVariantId={variant.id}
+                          bulkVariantField="color"
                         />
                       </td>
                       <td className="border border-slate-200 px-1 py-1 text-slate-700">
@@ -417,6 +527,8 @@ function ProductAdminPanel({
                           form={`save-variant-${variant.id}`}
                           name="unit"
                           defaultValue={variant.unit}
+                          bulkVariantId={variant.id}
+                          bulkVariantField="unit"
                         />
                       </td>
                       <td className="border border-slate-200 px-1 py-1 text-slate-700">
@@ -426,6 +538,8 @@ function ProductAdminPanel({
                           type="number"
                           step="0.01"
                           defaultValue={variant.price === null || variant.price === undefined ? "" : String(variant.price)}
+                          data-bulk-variant-id={variant.id}
+                          data-bulk-variant-field="price"
                           className="h-7 w-16 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
                         />
                       </td>
@@ -434,6 +548,8 @@ function ProductAdminPanel({
                           form={`save-variant-${variant.id}`}
                           name="stock_status"
                           defaultValue={variant.stock_status}
+                          data-bulk-variant-id={variant.id}
+                          data-bulk-variant-field="stock_status"
                           className="h-7 w-28 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
                         >
                           <option value="in_stock">in_stock / 有货</option>
@@ -442,7 +558,7 @@ function ProductAdminPanel({
                         </select>
                       </td>
                       <td className="border border-slate-200 px-1 py-1">
-                        <div className="flex min-w-24 flex-col gap-1">
+                        <div className="flex min-w-20 flex-col gap-1">
                           <button
                             form={`save-variant-${variant.id}`}
                             type="submit"
@@ -453,6 +569,8 @@ function ProductAdminPanel({
                           <form action={deleteProductVariant}>
                             <input type="hidden" name="password" value={password} />
                             <input type="hidden" name="variant_id" value={variant.id} />
+                            <input type="hidden" name="return_category" value={selectedCategory} />
+                            <input type="hidden" name="return_product" value={product.id} />
                             <button
                               type="submit"
                               className="h-7 w-full rounded border border-red-300 px-2 text-[11px] font-semibold text-red-700"
@@ -469,6 +587,32 @@ function ProductAdminPanel({
             </table>
           </div>
 
+          {product.product_variants.length > 0 ? (
+            <form
+              id={bulkFormId}
+              action={saveProductVariantsBulk}
+              className="mt-2 flex flex-col gap-2 rounded border border-blue-100 bg-blue-50 p-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <input type="hidden" name="password" value={password} />
+              <input type="hidden" name="product_id" value={product.id} />
+              <input type="hidden" name="product_slug" value={product.slug} />
+              <input type="hidden" name="return_category" value={selectedCategory} />
+              <input type="hidden" name="return_product" value={product.id} />
+              {product.product_variants.map((variant) => (
+                <input
+                  key={variant.id}
+                  type="hidden"
+                  name="variant_ids"
+                  value={variant.id}
+                />
+              ))}
+              <p className="text-[11px] text-blue-900">
+                Save all changed specification rows at once. 一次保存当前表格所有规格。
+              </p>
+              <BulkVariantSaveButton formId={bulkFormId} />
+            </form>
+          ) : null}
+
           <div className="mt-3 max-w-3xl">
             <div>
               <h4 className="text-xs font-semibold text-slate-950">New Specification / 新增规格</h4>
@@ -476,6 +620,7 @@ function ProductAdminPanel({
                 password={password}
                 productId={product.id}
                 productSlug={product.slug}
+                selectedCategory={selectedCategory}
               />
             </div>
           </div>
@@ -487,10 +632,12 @@ function ProductAdminPanel({
 
 function ProductForm({
   password,
-  product
+  product,
+  selectedCategory
 }: {
   password: string;
   product?: ProductWithVariants;
+  selectedCategory?: string;
 }) {
   return (
     <form
@@ -500,6 +647,8 @@ function ProductForm({
       <input type="hidden" name="password" value={password} />
       {product ? <input type="hidden" name="product_id" value={product.id} /> : null}
       {product ? <input type="hidden" name="slug" value={product.slug} /> : null}
+      {selectedCategory ? <input type="hidden" name="return_category" value={selectedCategory} /> : null}
+      {product ? <input type="hidden" name="return_product" value={product.id} /> : null}
       <TextField label="name / 产品名称" name="name" defaultValue={product?.name} required />
       <div className="rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] leading-snug text-slate-600">
         slug is generated automatically from the product name.
@@ -613,12 +762,16 @@ function ColorSelect({
   label,
   name,
   defaultValue,
-  form
+  form,
+  bulkVariantId,
+  bulkVariantField
 }: {
   label?: string;
   name: string;
   defaultValue?: string | null;
   form?: string;
+  bulkVariantId?: string;
+  bulkVariantField?: string;
 }) {
   const selectedValue = defaultValue?.trim() ?? "";
   const options = selectedValue && !PRODUCT_COLOR_OPTIONS.includes(selectedValue)
@@ -629,6 +782,8 @@ function ColorSelect({
       form={form}
       name={name}
       defaultValue={selectedValue}
+      data-bulk-variant-id={bulkVariantId}
+      data-bulk-variant-field={bulkVariantField}
       className={
         form
           ? "h-7 w-28 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
@@ -660,12 +815,16 @@ function UnitSelect({
   label,
   name,
   defaultValue,
-  form
+  form,
+  bulkVariantId,
+  bulkVariantField
 }: {
   label?: string;
   name: string;
   defaultValue?: string | null;
   form?: string;
+  bulkVariantId?: string;
+  bulkVariantField?: string;
 }) {
   const selectedValue = defaultValue?.trim() ?? "";
   const options = selectedValue && !PRODUCT_UNIT_OPTIONS.includes(selectedValue)
@@ -676,9 +835,11 @@ function UnitSelect({
       form={form}
       name={name}
       defaultValue={selectedValue || "piece"}
+      data-bulk-variant-id={bulkVariantId}
+      data-bulk-variant-field={bulkVariantField}
       className={
         form
-          ? "h-7 w-20 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
+          ? "h-7 w-16 rounded border border-slate-300 px-1.5 text-[11px] outline-none focus:border-slate-500"
           : "mt-0.5 h-7 w-full rounded border border-slate-300 px-2 text-[11px] outline-none focus:border-slate-500"
       }
     >
@@ -705,17 +866,21 @@ function UnitSelect({
 function VariantForm({
   password,
   productId,
-  productSlug
+  productSlug,
+  selectedCategory
 }: {
   password: string;
   productId: string;
   productSlug: string;
+  selectedCategory: string;
 }) {
   return (
     <form action={saveProductVariant} className="mt-2 grid gap-2 rounded border border-slate-200 p-2">
       <input type="hidden" name="password" value={password} />
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="product_slug" value={productSlug} />
+      <input type="hidden" name="return_category" value={selectedCategory} />
+      <input type="hidden" name="return_product" value={productId} />
       <div className="rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600">
         SKU is generated automatically from product, size, and color.
       </div>

@@ -10,6 +10,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 export async function saveProduct(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
+  const returnProduct = readString(formData.get("return_product"));
 
   if (!access.ok) {
     redirect("/admin/products");
@@ -35,7 +37,7 @@ export async function saveProduct(formData: FormData) {
   };
 
   if (!payload.name || !payload.slug) {
-    redirect(adminProductsPath(password, "Product name is required."));
+    redirect(adminProductsPath(password, "Product name is required.", returnCategory, returnProduct));
   }
 
   try {
@@ -52,7 +54,9 @@ export async function saveProduct(formData: FormData) {
     redirect(
       adminProductsPath(
         password,
-        error instanceof Error ? error.message : "Failed to upload product image."
+        error instanceof Error ? error.message : "Failed to upload product image.",
+        returnCategory,
+        returnProduct
       )
     );
   }
@@ -63,12 +67,12 @@ export async function saveProduct(formData: FormData) {
     : await supabase.from("products").insert(payload);
 
   if (error) {
-    redirect(adminProductsPath(password, error.message));
+    redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
-  redirect(adminProductsPath(password));
+  redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
 }
 
 async function buildUniqueProductSlug(productName: string, productId?: string) {
@@ -149,6 +153,8 @@ async function uploadProductImages(
 export async function toggleProductStatus(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
+  const returnProduct = readString(formData.get("return_product"));
 
   if (!access.ok) {
     redirect("/admin/products");
@@ -158,7 +164,7 @@ export async function toggleProductStatus(formData: FormData) {
   const status = readStatus(formData.get("status"));
 
   if (!productId) {
-    redirect(adminProductsPath(password, "Product ID is required."));
+    redirect(adminProductsPath(password, "Product ID is required.", returnCategory, returnProduct));
   }
 
   const supabase = createSupabaseAdminClient();
@@ -170,17 +176,18 @@ export async function toggleProductStatus(formData: FormData) {
     .eq("id", productId);
 
   if (error) {
-    redirect(adminProductsPath(password, error.message));
+    redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
-  redirect(adminProductsPath(password));
+  redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
 }
 
 export async function deleteProduct(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
 
   if (!access.ok) {
     redirect("/admin/products");
@@ -189,7 +196,7 @@ export async function deleteProduct(formData: FormData) {
   const productId = readString(formData.get("product_id"));
 
   if (!productId) {
-    redirect(adminProductsPath(password, "Product ID is required."));
+    redirect(adminProductsPath(password, "Product ID is required.", returnCategory));
   }
 
   const supabase = createSupabaseAdminClient();
@@ -202,23 +209,25 @@ export async function deleteProduct(formData: FormData) {
     .eq("product_id", productId);
 
   if (orderItemsError) {
-    redirect(adminProductsPath(password, orderItemsError.message));
+    redirect(adminProductsPath(password, orderItemsError.message, returnCategory));
   }
 
   const { error } = await supabase.from("products").delete().eq("id", productId);
 
   if (error) {
-    redirect(adminProductsPath(password, error.message));
+    redirect(adminProductsPath(password, error.message, returnCategory));
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
-  redirect(adminProductsPath(password));
+  redirect(adminProductsPath(password, undefined, returnCategory));
 }
 
 export async function saveProductVariant(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
+  const returnProduct = readString(formData.get("return_product"));
 
   if (!access.ok) {
     redirect("/admin/products");
@@ -241,7 +250,14 @@ export async function saveProductVariant(formData: FormData) {
   };
 
   if (!payload.product_id || !payload.sku) {
-    redirect(adminProductsPath(password, "Product, size, or color is required to generate SKU."));
+    redirect(
+      adminProductsPath(
+        password,
+        "Product, size, or color is required to generate SKU.",
+        returnCategory,
+        returnProduct
+      )
+    );
   }
 
   const supabase = createSupabaseAdminClient();
@@ -255,14 +271,16 @@ export async function saveProductVariant(formData: FormData) {
     : await duplicateQuery;
 
   if (duplicateError) {
-    redirect(adminProductsPath(password, duplicateError.message));
+    redirect(adminProductsPath(password, duplicateError.message, returnCategory, returnProduct));
   }
 
   if (duplicateVariants.length > 0) {
     redirect(
       adminProductsPath(
         password,
-        `SKU "${payload.sku}" already exists. Please edit the existing specification or use a new SKU.`
+        `SKU "${payload.sku}" already exists. Please edit the existing specification or use a new SKU.`,
+        returnCategory,
+        returnProduct
       )
     );
   }
@@ -272,17 +290,132 @@ export async function saveProductVariant(formData: FormData) {
     : await supabase.from("product_variants").insert(payload);
 
   if (error) {
-    redirect(adminProductsPath(password, productVariantErrorMessage(error, payload.sku)));
+    redirect(
+      adminProductsPath(
+        password,
+        productVariantErrorMessage(error, payload.sku),
+        returnCategory,
+        returnProduct
+      )
+    );
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
-  redirect(adminProductsPath(password));
+  redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
+}
+
+export async function saveProductVariantsBulk(formData: FormData) {
+  const password = readString(formData.get("password"));
+  const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
+  const returnProduct = readString(formData.get("return_product"));
+
+  if (!access.ok) {
+    redirect("/admin/products");
+  }
+
+  const productId = readString(formData.get("product_id"));
+  const productSlug = readString(formData.get("product_slug")) || productId;
+  const variantIds = formData
+    .getAll("variant_ids")
+    .map(readString)
+    .filter(Boolean);
+
+  if (!productId || variantIds.length === 0) {
+    redirect(
+      adminProductsPath(
+        password,
+        "No specifications to save.",
+        returnCategory,
+        returnProduct
+      )
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  for (const variantId of variantIds) {
+    const size = nullableString(formData.get(`variant:${variantId}:size`));
+    const color = nullableString(formData.get(`variant:${variantId}:color`));
+    const sku = buildVariantSku(productSlug, size, color);
+
+    if (!sku) {
+      redirect(
+        adminProductsPath(
+          password,
+          "Product, size, or color is required to generate SKU.",
+          returnCategory,
+          returnProduct
+        )
+      );
+    }
+
+    const { data: duplicateVariants, error: duplicateError } = await supabase
+      .from("product_variants")
+      .select("id")
+      .eq("sku", sku)
+      .neq("id", variantId)
+      .limit(1);
+
+    if (duplicateError) {
+      redirect(adminProductsPath(password, duplicateError.message, returnCategory, returnProduct));
+    }
+
+    if (duplicateVariants.length > 0) {
+      redirect(
+        adminProductsPath(
+          password,
+          `SKU "${sku}" already exists. Please edit the duplicate specification before saving all.`,
+          returnCategory,
+          returnProduct
+        )
+      );
+    }
+
+    const { error } = await supabase
+      .from("product_variants")
+      .update({
+        product_id: productId,
+        sku,
+        size,
+        color,
+        unit: readString(formData.get(`variant:${variantId}:unit`)) || "piece",
+        price: nullableNumber(formData.get(`variant:${variantId}:price`)),
+        stock_status: readStockStatus(formData.get(`variant:${variantId}:stock_status`))
+      })
+      .eq("id", variantId)
+      .eq("product_id", productId);
+
+    if (error) {
+      redirect(
+        adminProductsPath(
+          password,
+          productVariantErrorMessage(error, sku),
+          returnCategory,
+          returnProduct
+        )
+      );
+    }
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/order/[token]", "page");
+  redirect(
+    adminProductsPath(
+      password,
+      "All specifications saved.",
+      returnCategory,
+      returnProduct
+    )
+  );
 }
 
 export async function deleteProductVariant(formData: FormData) {
   const password = readString(formData.get("password"));
   const access = checkAdminAccess(password);
+  const returnCategory = readString(formData.get("return_category"));
+  const returnProduct = readString(formData.get("return_product"));
 
   if (!access.ok) {
     redirect("/admin/products");
@@ -291,7 +424,7 @@ export async function deleteProductVariant(formData: FormData) {
   const variantId = readString(formData.get("variant_id"));
 
   if (!variantId) {
-    redirect(adminProductsPath(password, "Specification ID is required."));
+    redirect(adminProductsPath(password, "Specification ID is required.", returnCategory, returnProduct));
   }
 
   const supabase = createSupabaseAdminClient();
@@ -301,18 +434,31 @@ export async function deleteProductVariant(formData: FormData) {
     .eq("id", variantId);
 
   if (error) {
-    redirect(adminProductsPath(password, error.message));
+    redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
-  redirect(adminProductsPath(password));
+  redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
 }
 
-function adminProductsPath(password: string, message?: string) {
+function adminProductsPath(
+  password: string,
+  message?: string,
+  category?: string,
+  productId?: string
+) {
   const params = new URLSearchParams({
     password
   });
+
+  if (category && category !== "all") {
+    params.set("category", category);
+  }
+
+  if (productId) {
+    params.set("product", productId);
+  }
 
   if (message) {
     params.set("message", message);

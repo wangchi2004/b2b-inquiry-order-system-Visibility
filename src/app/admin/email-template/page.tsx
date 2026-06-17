@@ -93,6 +93,8 @@ export default async function AdminEmailTemplatePage({
 
         {selectedCustomer && template ? (
           <section className="mt-6 space-y-6">
+            <CustomerProfileCard customer={selectedCustomer} />
+
             <div className="rounded border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950">
               <p className="font-semibold">Final order link / 最终订货链接</p>
               <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center">
@@ -152,8 +154,146 @@ export default async function AdminEmailTemplatePage({
             </p>
           </div>
         )}
+
+        <section className="mt-6 rounded border border-slate-200 bg-white p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">
+                Customer Database / 客户数据库
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Manage customer profiles, CRM status, source, score, and
+                contact permission in one place. 客户资料、CRM 状态、来源、评分和联系权限统一管理。
+              </p>
+            </div>
+            <Link
+              href={`/admin/customers?password=${encodeURIComponent(access.password)}`}
+              className="inline-flex h-11 items-center justify-center rounded bg-slate-950 px-4 text-sm font-semibold text-white"
+            >
+              Open Customer Database / 打开客户数据库
+            </Link>
+          </div>
+        </section>
       </section>
     </main>
+  );
+}
+
+function CustomerProfileCard({
+  customer
+}: {
+  customer: AdminTemplateCustomer;
+}) {
+  return (
+    <section className="rounded border border-slate-200 bg-white p-5">
+      <h2 className="text-lg font-semibold text-slate-950">
+        Customer Profile / 客户资料
+      </h2>
+      <dl className="mt-4 grid gap-4 text-sm md:grid-cols-2">
+        <ProfileItem label="Email / 邮件地址" value={customer.email} />
+        <ProfileItem label="Country / 国家" value={customer.country} />
+        <ProfileItem label="Name / 姓名" value={customer.name} />
+        <ProfileItem label="Phone / 电话" value={customer.phone} />
+        <ProfileItem label="WhatsApp" value={customer.whatsapp} />
+        <ProfileItem label="Company / 公司" value={customer.company} />
+        <ProfileItem label="Shop Name / 店名" value={customer.shop_name} />
+        <ProfileItem label="City / 城市" value={customer.city} />
+        <ProfileItem label="CRM Status / 客户状态" value={customer.status} />
+        <ProfileItem label="Stage / 跟进阶段" value={customer.stage} />
+        <ProfileItem
+          label="Score / 评分"
+          value={
+            customer.score === null || customer.score === undefined
+              ? null
+              : String(customer.score)
+          }
+        />
+        <ProfileItem label="Source / 来源" value={customer.source} />
+        <ProfileItem
+          label="Recipient / 收货人"
+          value={customer.shipping_recipient_name}
+        />
+        <ProfileItem
+          label="Shipping Phone / 收货电话"
+          value={customer.shipping_phone}
+        />
+        <ProfileItem
+          label="Shipping Country / 发货国家"
+          value={customer.shipping_country}
+        />
+        <ProfileItem
+          label="Shipping Address / 发货地址"
+          value={customer.shipping_address}
+          wide
+        />
+        <ProfileItem label="Note / 备注" value={customer.customer_note} wide />
+        <ProfileItem
+          label="Shipping Note / 物流备注"
+          value={customer.shipping_note}
+          wide
+        />
+        <ProfileLink label="Instagram / INS" value={customer.instagram} />
+        <ProfileLink label="Website / 网址" value={customer.website} />
+      </dl>
+    </section>
+  );
+}
+
+function ProfileItem({
+  label,
+  value,
+  wide = false
+}: {
+  label: string;
+  value: string | null;
+  wide?: boolean;
+}) {
+  return (
+    <div className={wide ? "md:col-span-2" : undefined}>
+      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 min-h-6 whitespace-pre-wrap break-words rounded bg-slate-50 px-3 py-2 text-slate-950">
+        {value || "-"}
+      </dd>
+    </div>
+  );
+}
+
+function ProfileLink({
+  label,
+  value
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div>
+      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 min-h-6 break-words rounded bg-slate-50 px-3 py-2">
+        <InlineLink value={value} />
+      </dd>
+    </div>
+  );
+}
+
+function InlineLink({ value }: { value: string | null }) {
+  if (!value) {
+    return <span>-</span>;
+  }
+
+  const href = normalizeUrl(value);
+
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      className="break-all text-blue-700 underline-offset-4 hover:underline"
+    >
+      {value}
+    </Link>
   );
 }
 
@@ -231,4 +371,20 @@ function customerLabel(customer: AdminTemplateCustomer) {
   const country = customer.country ? ` / ${customer.country}` : "";
 
   return `${name}${customer.email}${company}${country}`;
+}
+
+function normalizeUrl(value: string) {
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  if (value.startsWith("@")) {
+    return `https://www.instagram.com/${value.slice(1)}`;
+  }
+
+  if (/^[A-Za-z0-9._]+$/.test(value)) {
+    return `https://www.instagram.com/${value}`;
+  }
+
+  return `https://${value}`;
 }

@@ -26,6 +26,12 @@ type CategoryTranslationRow = {
   name: string;
 };
 
+export type HomeGalleryImage = {
+  id: string;
+  url: string;
+  title: string;
+};
+
 export async function getActiveProductsWithVariants(
   locale = "en"
 ): Promise<ProductsResult> {
@@ -111,6 +117,57 @@ export async function getActiveProductsWithVariants(
     categoryTranslations: Object.fromEntries(categoryTranslations.entries()),
     error: null
   };
+}
+
+export async function getHomeGalleryImages(limit = 24): Promise<HomeGalleryImage[]> {
+  if (!hasSupabasePublicConfig()) {
+    return [];
+  }
+
+  const supabase = hasSupabaseAdminConfig()
+    ? createSupabaseAdminClient()
+    : createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id,name,image_url,image_url_2,image_url_3")
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.warn("Home gallery images are not available", {
+      error: error.message
+    });
+    return [];
+  }
+
+  const images: HomeGalleryImage[] = [];
+  const usedUrls = new Set<string>();
+
+  for (const product of data ?? []) {
+    for (const [index, url] of [
+      product.image_url,
+      product.image_url_2,
+      product.image_url_3
+    ].entries()) {
+      if (!url || usedUrls.has(url)) {
+        continue;
+      }
+
+      usedUrls.add(url);
+      images.push({
+        id: `${product.id}-${index}`,
+        url,
+        title: product.name
+      });
+
+      if (images.length >= limit) {
+        return images;
+      }
+    }
+  }
+
+  return images;
 }
 
 async function getProductTranslations(productIds: string[], locale: string) {

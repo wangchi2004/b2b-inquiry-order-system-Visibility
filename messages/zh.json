@@ -26,6 +26,9 @@
     "enterDescription": "请先填写电子邮件和国家。不需要账号或密码。",
     "enterButton": "进入产品页面",
     "viewSamples": "查看样本",
+    "photoWallTitle": "照片墙",
+    "photoWallDescription": "点击任意图片即可查看大图。",
+    "photoWallClose": "关闭",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "美国",
     "emailError": "请输入有效的电子邮件地址。",
@@ -34,7 +37,7 @@
   "Samples": {
     "eyebrow": "产品样本",
     "title": "样本目录",
-    "description": "浏览产品图片、介绍和规格。此页面仅用于查看样本，不显示价格。",
+    "description": "浏览产品图片。此页面仅用于查看样本，不显示价格、产品介绍和规格。",
     "specifications": "规格",
     "unit": "单位",
     "sku": "SKU"

@@ -27,8 +27,8 @@ export default async function SamplePage({ searchParams }: SamplePageProps) {
               Sample Catalog
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Browse product images, descriptions, and specifications. This page
-              is for sample viewing only and does not show prices.
+              Browse product images. This page is for sample viewing only and
+              does not show prices, product descriptions, or specifications.
             </p>
           </div>
           <Link

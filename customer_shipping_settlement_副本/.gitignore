@@ -1,0 +1,14 @@
+.venv/
+.venv-mac/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+data/app.db
+data/backups/
+data/exports/
+data/logs/
+
+dist/
+build/
+*.spec

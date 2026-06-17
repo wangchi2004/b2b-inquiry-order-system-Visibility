@@ -67,18 +67,29 @@ export function AdminOrderProductDetails({
         <form action={saveItemsAction}>
           {orderId ? <input type="hidden" name="order_id" value={orderId} /> : null}
           {password ? <input type="hidden" name="password" value={password} /> : null}
-          <table className="min-w-full border-collapse text-sm">
+          <table className="w-full min-w-[980px] table-fixed border-collapse text-xs">
+            <colgroup>
+              <col className="w-[8%]" />
+              <col className="w-[16%]" />
+              <col className="w-[24%]" />
+              <col className="w-[10%]" />
+              <col className="w-[10%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8%]" />
+              <col className="w-[9%]" />
+              <col className="w-[7%]" />
+            </colgroup>
             <thead className="bg-slate-50 text-left text-slate-600">
               <tr>
-                <th className="w-28 border border-slate-200 px-3 py-2">Image</th>
-                <th className="min-w-44 border border-slate-200 px-3 py-2">Product</th>
-                <th className="min-w-72 border border-slate-200 px-3 py-2">SKU</th>
-                <th className="min-w-28 border border-slate-200 px-3 py-2">Size</th>
-                <th className="min-w-28 border border-slate-200 px-3 py-2">Color</th>
-                <th className="min-w-24 border border-slate-200 px-3 py-2 text-right">Quantity</th>
-                <th className="min-w-24 border border-slate-200 px-3 py-2">Unit</th>
-                <th className="min-w-28 border border-slate-200 px-3 py-2 text-right">Unit Price</th>
-                <th className="border border-slate-200 px-3 py-2 text-right">Subtotal</th>
+                <th className="border border-slate-200 px-2 py-2">Image</th>
+                <th className="border border-slate-200 px-2 py-2">Product</th>
+                <th className="border border-slate-200 px-2 py-2">SKU</th>
+                <th className="border border-slate-200 px-2 py-2">Size</th>
+                <th className="border border-slate-200 px-2 py-2">Color</th>
+                <th className="border border-slate-200 px-2 py-2 text-right">Qty</th>
+                <th className="border border-slate-200 px-2 py-2">Unit</th>
+                <th className="border border-slate-200 px-2 py-2 text-right">Unit Price</th>
+                <th className="border border-slate-200 px-2 py-2 text-right">Subtotal</th>
               </tr>
             </thead>
             <tbody>
@@ -92,10 +103,10 @@ export function AdminOrderProductDetails({
                       {index === 0 ? (
                         <td
                           rowSpan={group.items.length}
-                          className="border border-slate-200 px-3 py-3"
+                          className="border border-slate-200 px-2 py-2"
                         >
                           {group.imageUrl ? (
-                            <div className="h-20 w-20 overflow-hidden rounded border border-slate-200 bg-slate-50">
+                            <div className="mx-auto h-16 w-16 overflow-hidden rounded border border-slate-200 bg-slate-50">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={group.imageUrl}
@@ -104,69 +115,69 @@ export function AdminOrderProductDetails({
                               />
                             </div>
                           ) : (
-                            <div className="flex h-20 w-20 items-center justify-center rounded border border-slate-200 bg-slate-50 text-center text-xs text-slate-400">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded border border-slate-200 bg-slate-50 text-center text-[11px] text-slate-400">
                               No image
                             </div>
                           )}
                         </td>
                       ) : null}
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input type="hidden" name="item_id" value={item.id} />
                         <input
                           name={`item_product_name_${item.id}`}
                           defaultValue={item.product_name}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-950 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-xs text-slate-950 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_sku_${item.id}`}
                           defaultValue={item.sku ?? ""}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_size_${item.id}`}
                           defaultValue={item.size ?? ""}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_color_${item.id}`}
                           defaultValue={item.color ?? ""}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_quantity_${item.id}`}
                           type="number"
                           min="1"
                           step="1"
                           defaultValue={item.quantity}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-right text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-right text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_unit_${item.id}`}
                           defaultValue={item.unit ?? ""}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2">
+                      <td className="border border-slate-200 px-2 py-1.5">
                         <input
                           name={`item_unit_price_${item.id}`}
                           type="number"
                           min="0"
                           step="0.01"
                           defaultValue={unitPrice ?? ""}
-                          className="h-9 w-full rounded border border-slate-300 px-2 text-right text-slate-700 outline-none focus:border-slate-500"
+                          className="h-8 w-full rounded border border-slate-300 px-2 text-right text-xs text-slate-700 outline-none focus:border-slate-500"
                         />
                       </td>
-                      <td className="border border-slate-200 px-3 py-2 text-right font-medium text-slate-950">
+                      <td className="border border-slate-200 px-2 py-1.5 text-right font-medium text-slate-950">
                         {formatMoney(lineTotal)}
                       </td>
                     </tr>

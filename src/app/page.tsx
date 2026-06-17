@@ -1,8 +1,12 @@
 import { Header } from "@/components/Header";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
+import { HomePhotoWall } from "@/components/HomePhotoWall";
+import { getHomeGalleryImages } from "@/lib/products";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const galleryImages = await getHomeGalleryImages();
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -80,6 +84,7 @@ export default function HomePage() {
           />
         </div>
       </section>
+      <HomePhotoWall images={galleryImages} />
     </main>
   );
 }

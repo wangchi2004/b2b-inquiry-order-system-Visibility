@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
+import { HomePhotoWall } from "@/components/HomePhotoWall";
+import { getHomeGalleryImages } from "@/lib/products";
 
 type LocalizedHomePageProps = {
   params: Promise<{
@@ -15,6 +17,7 @@ export default async function LocalizedHomePage({
   const { locale } = await params;
   const common = await getTranslations("Common");
   const home = await getTranslations("Home");
+  const galleryImages = await getHomeGalleryImages();
 
   return (
     <main className="min-h-screen">
@@ -98,6 +101,14 @@ export default async function LocalizedHomePage({
           />
         </div>
       </section>
+      <HomePhotoWall
+        images={galleryImages}
+        labels={{
+          title: home("photoWallTitle"),
+          description: home("photoWallDescription"),
+          close: home("photoWallClose")
+        }}
+      />
     </main>
   );
 }

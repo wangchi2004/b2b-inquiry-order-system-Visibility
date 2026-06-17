@@ -26,6 +26,9 @@
     "enterDescription": "먼저 이메일과 국가를 입력해 주세요. 계정이나 비밀번호는 필요 없습니다.",
     "enterButton": "제품 페이지로 이동",
     "viewSamples": "샘플 보기",
+    "photoWallTitle": "사진 모음",
+    "photoWallDescription": "사진을 클릭하면 크게 볼 수 있습니다.",
+    "photoWallClose": "닫기",
     "emailPlaceholder": "buyer@example.com",
     "countryPlaceholder": "South Korea",
     "emailError": "올바른 이메일 주소를 입력해 주세요.",
@@ -34,7 +37,7 @@
   "Samples": {
     "eyebrow": "제품 샘플",
     "title": "샘플 카탈로그",
-    "description": "제품 이미지, 설명, 사양을 확인하세요. 이 페이지는 샘플 확인용이며 가격은 표시하지 않습니다.",
+    "description": "제품 이미지만 확인하세요. 이 페이지는 샘플 확인용이며 가격, 제품 설명, 사양은 표시하지 않습니다.",
     "specifications": "사양",
     "unit": "단위",
     "sku": "SKU"

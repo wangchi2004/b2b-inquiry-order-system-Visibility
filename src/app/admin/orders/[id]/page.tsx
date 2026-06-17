@@ -37,7 +37,7 @@ export default async function AdminOrderDetailPage({
   return (
     <main className="min-h-screen">
       <Header />
-      <section className="mx-auto max-w-6xl px-6 py-10">
+      <section className="mx-auto max-w-[1500px] px-6 py-10">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-slate-500">Admin / Order detail</p>
