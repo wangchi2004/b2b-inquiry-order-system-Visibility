@@ -132,7 +132,7 @@ export async function getHomeGalleryImages(limit = 24): Promise<HomeGalleryImage
     .select("id,name,image_url,image_url_2,image_url_3")
     .eq("status", "active")
     .order("updated_at", { ascending: false })
-    .limit(limit);
+    .limit(Math.max(limit * 4, 100));
 
   if (error) {
     console.warn("Home gallery images are not available", {
@@ -160,14 +160,10 @@ export async function getHomeGalleryImages(limit = 24): Promise<HomeGalleryImage
         url,
         title: product.name
       });
-
-      if (images.length >= limit) {
-        return images;
-      }
     }
   }
 
-  return images;
+  return shuffleByDailySeed(images).slice(0, limit);
 }
 
 async function getProductTranslations(productIds: string[], locale: string) {
@@ -285,4 +281,28 @@ function compareVariants(a: ProductWithVariants["product_variants"][number], b: 
   }
 
   return aSize.localeCompare(bSize);
+}
+
+function shuffleByDailySeed<T>(items: T[]) {
+  const shuffled = [...items];
+  let seed = getDailySeed();
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const swapIndex = seed % (index + 1);
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+function getDailySeed() {
+  const today = new Date().toISOString().slice(0, 10);
+  let seed = 0;
+
+  for (const character of today) {
+    seed = (seed * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return seed;
 }
