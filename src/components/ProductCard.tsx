@@ -203,14 +203,16 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => openPreview(true)}
-            disabled={!activeImage}
-            className="mt-4 h-10 w-full rounded border border-slate-300 text-sm font-semibold text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
-          >
-            {labels?.viewDetails ?? "View Details"}
-          </button>
+          {!isSampleMode ? (
+            <button
+              type="button"
+              onClick={() => openPreview(true)}
+              disabled={!activeImage}
+              className="mt-4 h-10 w-full rounded border border-slate-300 text-sm font-semibold text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
+            >
+              {labels?.viewDetails ?? "View Details"}
+            </button>
+          ) : null}
         </div>
 
         {!isSampleMode ? (
