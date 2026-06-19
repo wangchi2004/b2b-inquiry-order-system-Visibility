@@ -149,14 +149,14 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div
               className={
                 isSampleMode
-                  ? "relative mx-auto min-h-[520px] w-full flex-1"
+                  ? "relative mx-auto w-full"
                   : "relative mx-auto max-w-[220px]"
               }
             >
               <button
                 type="button"
                 onClick={() => openPreview()}
-                className={isSampleMode ? "block h-full w-full" : "block w-full"}
+                className="block w-full"
                 aria-label={`Open large image for ${productName}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -165,7 +165,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                   alt={productName}
                   className={
                     isSampleMode
-                      ? "h-full min-h-[520px] w-full rounded bg-slate-100 object-contain"
+                      ? "h-auto w-full rounded bg-slate-100 object-contain"
                       : "aspect-[4/3] w-full rounded bg-slate-100 object-contain"
                   }
                 />
@@ -195,7 +195,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div
               className={
                 isSampleMode
-                  ? "mx-auto flex min-h-[520px] w-full flex-1 items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
+                  ? "mx-auto flex min-h-52 w-full items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
                   : "mx-auto flex aspect-[4/3] max-w-[220px] items-center justify-center rounded bg-slate-100 text-sm text-slate-400"
               }
             >
