@@ -48,8 +48,8 @@ export function ProductCatalog({
   const categoryCounts = getCategoryCounts(products);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-      <aside className="hidden rounded border border-slate-200 bg-white p-4 lg:block lg:sticky lg:top-6 lg:self-start">
+    <div className="grid grid-cols-[118px_minmax(0,1fr)] gap-3 sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[240px_1fr] lg:gap-6">
+      <aside className="sticky top-3 max-h-[calc(100vh-1.5rem)] self-start overflow-y-auto rounded border border-slate-200 bg-white p-2 sm:p-3 lg:top-6 lg:p-4">
         <CategoryNav
           basePath={basePath}
           selectedCategory={selectedCategory}
@@ -60,25 +60,9 @@ export function ProductCatalog({
         />
       </aside>
 
-      <div className="space-y-5">
-        <details className="rounded border border-slate-200 bg-white p-4 lg:hidden">
-          <summary className="cursor-pointer text-base font-semibold text-slate-950">
-            {labels?.categories ?? "Categories"}
-          </summary>
-          <div className="mt-4">
-            <CategoryNav
-              basePath={basePath}
-              selectedCategory={selectedCategory}
-              searchQuery={normalizedSearchQuery}
-              categoryCounts={categoryCounts}
-              totalCount={products.length}
-              labels={labels}
-            />
-          </div>
-        </details>
-
-        <section className="rounded border border-slate-200 bg-white p-4">
-          <form className="grid gap-3 md:grid-cols-[1fr_auto]" action={basePath}>
+      <div className="min-w-0 space-y-4 lg:space-y-5">
+        <section className="rounded border border-slate-200 bg-white p-3 lg:p-4">
+          <form className="grid gap-2 sm:grid-cols-[1fr_auto] lg:gap-3" action={basePath}>
             {selectedCategory !== "all" ? (
               <input type="hidden" name="category" value={selectedCategory} />
             ) : null}
@@ -95,14 +79,14 @@ export function ProductCatalog({
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="h-11 rounded bg-slate-950 px-4 text-sm font-semibold text-white"
+                className="h-11 flex-1 rounded bg-slate-950 px-3 text-sm font-semibold text-white sm:flex-none sm:px-4"
               >
                 {labels?.search ?? "Search"}
               </button>
               {(normalizedSearchQuery || selectedCategory !== "all") ? (
                 <Link
                   href={basePath}
-                  className="inline-flex h-11 items-center rounded border border-slate-300 px-4 text-sm font-semibold text-slate-800"
+                  className="inline-flex h-11 flex-1 items-center justify-center rounded border border-slate-300 px-3 text-sm font-semibold text-slate-800 sm:flex-none sm:px-4"
                 >
                   {labels?.clear ?? "Clear"}
                 </Link>
@@ -167,8 +151,8 @@ function CategoryNav({
   const otherCategories = getOtherCategories(categoryCounts);
 
   return (
-    <nav className="space-y-2 text-sm">
-      <h2 className="mb-3 text-base font-semibold text-slate-950">
+    <nav className="space-y-1 text-xs sm:text-sm lg:space-y-2">
+      <h2 className="mb-2 text-sm font-semibold text-slate-950 lg:mb-3 lg:text-base">
         {labels?.categories ?? "Categories"}
       </h2>
       <CategoryLink
@@ -221,18 +205,18 @@ function CategoryLink({
   return (
     <Link
       href={href}
-      className={`flex items-center justify-between rounded px-3 py-2 ${
+      className={`flex items-center justify-between gap-1 rounded px-2 py-2 lg:px-3 ${
         active
           ? "bg-slate-950 font-semibold text-white"
           : "text-slate-700 hover:bg-slate-100"
       }`}
     >
-      <span className={`break-words ${level > 0 ? "text-xs" : ""}`}>
+      <span className={`min-w-0 break-words leading-snug ${level > 0 ? "text-[11px] sm:text-xs" : ""}`}>
         {level > 0 ? `${"  ".repeat(level - 1)}└─ ` : ""}
         {label}
       </span>
       <span
-        className={`ml-3 rounded px-2 py-0.5 text-xs ${
+        className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] lg:px-2 lg:text-xs ${
           active ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600"
         }`}
       >
@@ -269,7 +253,7 @@ function CategoryTreeLink({
         level={level}
       />
       {node.children?.length ? (
-        <div className="mt-1 space-y-1 pl-4">
+        <div className="mt-1 space-y-1 pl-2 sm:pl-3 lg:pl-4">
           {node.children.map((childNode) => (
             <CategoryTreeLink
               key={childNode.name}
