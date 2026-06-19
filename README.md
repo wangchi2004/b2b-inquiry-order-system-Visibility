@@ -56,6 +56,7 @@ RESEND_API_KEY=
 ADMIN_ORDER_EMAIL=
 ORDER_EMAIL_FROM=
 ADMIN_PASSWORD=
+ADMIN_ACCESS_KEY=
 NEXT_PUBLIC_SITE_URL=
 CLOUDFLARE_R2_ACCOUNT_ID=
 CLOUDFLARE_R2_ACCESS_KEY_ID=
@@ -73,6 +74,7 @@ CLOUDFLARE_R2_PUBLIC_BASE_URL=
 - `ADMIN_ORDER_EMAIL`：管理员接收订单邮件的邮箱。
 - `ORDER_EMAIL_FROM`：Resend 已验证的发件人，例如 `B2B Inquiry Order <chi@chinashoerepairmaterials.com>`。
 - `ADMIN_PASSWORD`：第一版后台简单密码。
+- `ADMIN_ACCESS_KEY`：可选，前台国家拦截的白名单参数。配置后可用 `?allow=YOUR_KEY` 临时放行。
 - `NEXT_PUBLIC_SITE_URL`：网站正式访问地址，例如 `https://your-domain.com`。
 - `CLOUDFLARE_R2_ACCOUNT_ID`：Cloudflare 账户 ID。
 - `CLOUDFLARE_R2_ACCESS_KEY_ID`：R2 API Token 的 Access Key ID。
