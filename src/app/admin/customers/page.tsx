@@ -108,6 +108,12 @@ export default async function AdminCustomersPage({
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              href={`/admin/customers/new?password=${encodeURIComponent(access.password)}`}
+              className="inline-flex h-11 items-center justify-center rounded bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"
+            >
+              New Customer / 新增客户
+            </Link>
+            <Link
               href={`/admin/email-template?password=${encodeURIComponent(access.password)}`}
               className="inline-flex h-11 items-center justify-center rounded border border-slate-300 px-4 text-sm font-semibold text-slate-900"
             >
