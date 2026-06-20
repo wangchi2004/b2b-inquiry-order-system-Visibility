@@ -271,16 +271,18 @@ export default async function AdminCustomersPage({
                 {filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="border-t border-slate-200">
                     <TableCell sticky>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-1">
                         <Link
                           href={`/admin/customers/${encodeURIComponent(
                             customer.id
                           )}?password=${encodeURIComponent(access.password)}`}
-                          className="inline-flex h-9 items-center justify-center rounded border border-slate-300 px-3 text-xs font-semibold text-slate-900 hover:bg-slate-50"
+                          aria-label="Edit customer / 修改客户"
+                          title="Edit / 修改"
+                          className="inline-flex size-7 shrink-0 items-center justify-center border border-slate-300 text-base font-semibold text-slate-900 hover:bg-slate-50"
                         >
-                          Edit / 修改
+                          ✎
                         </Link>
-                        <form action={deleteCustomerProfile}>
+                        <form action={deleteCustomerProfile} className="shrink-0">
                           <input
                             type="hidden"
                             name="password"
@@ -293,12 +295,14 @@ export default async function AdminCustomersPage({
                           />
                           <button
                             type="submit"
-                            className="h-9 w-full rounded border border-red-300 px-3 text-xs font-semibold text-red-700 hover:bg-red-50"
+                            aria-label="Delete customer / 删除客户"
+                            title="Delete / 删除"
+                            className="inline-flex size-7 items-center justify-center border border-red-300 text-base font-semibold text-red-700 hover:bg-red-50"
                           >
-                            Delete / 删除
+                            ×
                           </button>
                         </form>
-                        <form action={markCustomerDoNotContact}>
+                        <form action={markCustomerDoNotContact} className="shrink-0">
                           <input
                             type="hidden"
                             name="password"
@@ -316,9 +320,11 @@ export default async function AdminCustomersPage({
                           />
                           <button
                             type="submit"
-                            className="h-9 w-full rounded border border-amber-300 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+                            aria-label="Block customer / 禁止联系客户"
+                            title="Block / 禁止联系"
+                            className="inline-flex size-7 items-center justify-center border border-amber-300 text-base font-semibold text-amber-800 hover:bg-amber-50"
                           >
-                            Block / 禁止联系
+                            ⊘
                           </button>
                         </form>
                       </div>
@@ -417,7 +423,7 @@ function TableHead({
     <th
       className={`px-3 py-3 font-semibold ${
         sticky
-          ? "sticky left-0 z-10 min-w-32 border-r border-slate-200 bg-slate-50"
+          ? "sticky left-0 z-10 w-28 min-w-28 border-r border-slate-200 bg-slate-50"
           : ""
       }`}
     >
@@ -439,7 +445,7 @@ function TableCell({
     <td
       className={`max-w-60 whitespace-pre-wrap break-words px-3 py-3 align-top ${
         strong ? "font-semibold text-slate-950" : "text-slate-700"
-      } ${sticky ? "sticky left-0 z-10 min-w-32 border-r border-slate-200 bg-white" : ""}`}
+      } ${sticky ? "sticky left-0 z-10 w-28 min-w-28 border-r border-slate-200 bg-white px-2" : ""}`}
     >
       {children}
     </td>
