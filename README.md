@@ -30,7 +30,9 @@
 - 后台订单列表和订单详情
 - 后台产品管理、规格管理、上下架
 - 后台产品图片上传到 Cloudflare R2
-- 后台邮件模板页，可复制 HTML 和纯文本邮件
+- 国家邮件模板管理、邮件预览、手动确认发送和发送记录
+- 按客户国家自动匹配模板，没有匹配时回退默认英文模板
+- 成功发送后 15 天防重复发送（测试邮箱除外）
 
 ## 安装依赖
 
@@ -104,7 +106,13 @@ CLOUDFLARE_R2_PUBLIC_BASE_URL=
 -- supabase/product_images.sql
 ```
 
-6. 把 Supabase URL、anon key、service role key 填入 `.env.local`。
+6. 启用国家邮件模板、主推产品和发送记录，执行：
+
+```sql
+-- supabase/email_campaign_templates.sql
+```
+
+7. 把 Supabase URL、anon key、service role key 填入 `.env.local`。
 
 主要数据表：
 
@@ -114,6 +122,9 @@ CLOUDFLARE_R2_PUBLIC_BASE_URL=
 - `order_links`：客户专属链接表
 - `orders`：订单主表
 - `order_items`：订单明细表
+- `email_templates`：按国家匹配的邮件模板
+- `email_template_products`：每个模板选择的 1–6 个主推产品
+- `email_send_logs`：邮件发送状态、Resend ID 和内容快照
 
 第一版为了 MVP 跑通，没有做复杂 RLS。前台读取产品数据，服务端接口和后台页面使用 `SUPABASE_SERVICE_ROLE_KEY` 写入数据。
 
@@ -135,6 +146,10 @@ ORDER_EMAIL_FROM=B2B Inquiry Order <你的已验证发件邮箱>
 - 管理员收到：`New B2B Inquiry Order`
 - 客户收到：`We received your order request`
 - 如果邮件发送失败，订单仍然会保存，接口会返回 `warning`。
+- 后台国家邮件模板页使用同一 Resend 配置手动发送开发邮件。
+- 后台发送前会显示收件邮箱和模板名称进行二次确认。
+- 同一邮箱成功发送后 15 天内不能重复发送；失败发送不进入冷却期。
+- `wangchi.2004@gmail.com` 是唯一的冷却期测试例外。
 
 ## 配置 Cloudflare R2 图片存储
 
@@ -197,7 +212,7 @@ http://localhost:3000
 - 询盘车：`http://localhost:3000/cart`
 - 后台订单：`http://localhost:3000/admin/orders?password=YOUR_ADMIN_PASSWORD`
 - 后台产品：`http://localhost:3000/admin/products?password=YOUR_ADMIN_PASSWORD`
-- 邮件模板：`http://localhost:3000/admin/email-template?password=YOUR_ADMIN_PASSWORD`
+- 国家邮件模板与发送：`http://localhost:3000/admin/email-template?password=YOUR_ADMIN_PASSWORD`
 
 ## 检查和构建
 
