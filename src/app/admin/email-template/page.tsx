@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConfirmEmailSendButton } from "@/components/ConfirmEmailSendButton";
+import { EmailCampaignCustomerSelector } from "@/components/EmailCampaignCustomerSelector";
 import { EmailCampaignPreview } from "@/components/EmailCampaignPreview";
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
@@ -156,6 +157,7 @@ export default async function AdminEmailTemplatePage({
             selectedCustomer={selectedCustomer}
             templates={activeTemplates}
             selectedTemplate={selectedTemplate}
+            initialTemplateId={params.template_id ?? ""}
             eligibility={eligibility}
             rendered={rendered}
             schemaMissing={schemaMissing}
@@ -186,6 +188,7 @@ function SendEmailView({
   selectedCustomer,
   templates,
   selectedTemplate,
+  initialTemplateId,
   eligibility,
   rendered,
   schemaMissing
@@ -195,6 +198,7 @@ function SendEmailView({
   selectedCustomer: AdminTemplateCustomer | null;
   templates: AdminCampaignTemplate[];
   selectedTemplate: AdminCampaignTemplate | null;
+  initialTemplateId: string;
   eligibility: Awaited<ReturnType<typeof getEligibilitySafely>> | null;
   rendered: ReturnType<typeof renderCampaignEmail> | null;
   schemaMissing: boolean;
@@ -213,48 +217,13 @@ function SendEmailView({
         <h2 className="text-lg font-semibold text-slate-950">
           1. Customer and Template / 选择客户与模板
         </h2>
-        <form method="GET" className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
-          <input type="hidden" name="password" value={password} />
-          <input type="hidden" name="tab" value="send" />
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">
-            Customer / 客户
-            <select
-              name="customer_id"
-              defaultValue={selectedCustomer?.id ?? ""}
-              className="h-11 border border-slate-300 bg-white px-3 font-normal"
-              required
-            >
-              <option value="">Select customer / 选择客户</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customerLabel(customer)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">
-            Template override / 手动选择模板
-            <select
-              name="template_id"
-              defaultValue={selectedTemplate?.id ?? ""}
-              className="h-11 border border-slate-300 bg-white px-3 font-normal"
-            >
-              <option value="">Auto match by country / 按国家自动匹配</option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                  {template.is_default ? " (Default)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="h-11 self-end bg-slate-950 px-5 text-sm font-semibold text-white"
-          >
-            Load Preview / 加载预览
-          </button>
-        </form>
+        <EmailCampaignCustomerSelector
+          password={password}
+          customers={customers}
+          templates={templates}
+          initialCustomerId={selectedCustomer?.id ?? ""}
+          initialTemplateId={initialTemplateId}
+        />
       </section>
 
       {selectedCustomer ? (
@@ -809,15 +778,6 @@ function normalizeTab(value: string | undefined): EmailTemplateTab {
 
 function emailPageHref(password: string, tab: EmailTemplateTab) {
   return `/admin/email-template?password=${encodeURIComponent(password)}&tab=${tab}`;
-}
-
-function customerLabel(customer: AdminTemplateCustomer) {
-  const name = customer.name ? `${customer.name} - ` : "";
-  const email = customer.email || "No email";
-  const company = customer.company ? ` / ${customer.company}` : "";
-  const country = customer.country ? ` / ${customer.country}` : "";
-
-  return `${name}${email}${company}${country}`;
 }
 
 function formatDateTime(value: string) {

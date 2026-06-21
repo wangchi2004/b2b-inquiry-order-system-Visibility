@@ -59,6 +59,11 @@ create index if not exists email_send_logs_recipient_idx
 create index if not exists email_send_logs_status_idx
   on public.email_send_logs (status, created_at desc);
 
+grant usage on schema public to service_role;
+grant select, insert, update, delete on table public.email_templates to service_role;
+grant select, insert, update, delete on table public.email_template_products to service_role;
+grant select, insert, update, delete on table public.email_send_logs to service_role;
+
 create or replace function public.set_email_campaign_updated_at()
 returns trigger
 language plpgsql
