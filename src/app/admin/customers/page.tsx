@@ -8,6 +8,10 @@ import {
 } from "@/app/admin/customers/[id]/actions";
 import { checkAdminAccess } from "@/lib/admin";
 import {
+  customerCellContentClass,
+  customerInlineLinkClass
+} from "@/lib/customerTableDisplay";
+import {
   getTemplateCustomers,
   type AdminTemplateCustomer
 } from "@/lib/adminEmailTemplates";
@@ -449,11 +453,11 @@ function TableCell({
 }) {
   return (
     <td
-      className={`max-w-60 whitespace-pre-wrap break-words px-3 py-3 align-top ${
+      className={`max-w-60 px-3 py-3 align-top ${
         strong ? "font-semibold text-slate-950" : "text-slate-700"
       } ${sticky ? "sticky left-0 z-10 w-28 min-w-28 border-r border-slate-200 bg-white px-2" : ""}`}
     >
-      {children}
+      <div className={sticky ? "" : customerCellContentClass}>{children}</div>
     </td>
   );
 }
@@ -489,7 +493,8 @@ function InlineLink({ value }: { value: string | null }) {
     <Link
       href={href}
       target="_blank"
-      className="break-all text-blue-700 underline-offset-4 hover:underline"
+      className={customerInlineLinkClass}
+      title={value}
     >
       {value}
     </Link>
