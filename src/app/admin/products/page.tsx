@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { BulkVariantSaveButton } from "@/components/BulkVariantSaveButton";
 import { Header } from "@/components/Header";
 import { ProductImageUploadCard } from "@/components/ProductImageUploadCard";
+import { ProductSaveButton } from "@/components/ProductSaveButton";
 import { checkAdminAccess } from "@/lib/admin";
 import { getAdminProducts } from "@/lib/adminProducts";
 import {
@@ -708,12 +709,7 @@ function ProductForm({
         />
       </label>
       <div className="md:col-span-2">
-        <button
-          type="submit"
-          className="h-8 rounded bg-slate-950 px-3 text-xs font-semibold text-white"
-        >
-          {product ? "Save Product / 保存产品" : "Create Product / 创建产品"}
-        </button>
+        <ProductSaveButton isEditing={Boolean(product)} />
       </div>
     </form>
   );

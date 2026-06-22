@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkAdminAccess } from "@/lib/admin";
 import { normalizeProductCategory } from "@/lib/productCategories";
+import {
+  buildNewProductSlug,
+  productCreateErrorMessage
+} from "@/lib/productCreation";
 import { uploadProductImageToR2 } from "@/lib/r2";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 
@@ -22,7 +26,7 @@ export async function saveProduct(formData: FormData) {
   const submittedSlug = readString(formData.get("slug"));
   const slug = productId
     ? submittedSlug
-    : await buildUniqueProductSlug(productName, productId);
+    : buildNewProductSlug(productName);
   const payload = {
     name: productName,
     slug,
@@ -67,39 +71,19 @@ export async function saveProduct(formData: FormData) {
     : await supabase.from("products").insert(payload);
 
   if (error) {
-    redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
+    redirect(
+      adminProductsPath(
+        password,
+        productId ? error.message : productCreateErrorMessage(error, productName),
+        returnCategory,
+        returnProduct
+      )
+    );
   }
 
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
-}
-
-async function buildUniqueProductSlug(productName: string, productId?: string) {
-  const baseSlug = slugifySkuPart(productName) || "product";
-  const supabase = createSupabaseAdminClient();
-
-  for (let index = 1; index <= 100; index += 1) {
-    const candidate = index === 1 ? baseSlug : `${baseSlug}-${index}`;
-    const query = supabase
-      .from("products")
-      .select("id")
-      .eq("slug", candidate)
-      .limit(1);
-    const { data, error } = productId
-      ? await query.neq("id", productId)
-      : await query;
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (data.length === 0) {
-      return candidate;
-    }
-  }
-
-  throw new Error("Could not generate a unique product slug.");
 }
 
 async function uploadProductImages(
