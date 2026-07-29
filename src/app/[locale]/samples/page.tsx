@@ -34,9 +34,11 @@ export default async function LocalizedSamplePage({
       <SampleAnalyticsRecorder locale={locale} />
       <Header
         homeHref={`/${locale}`}
+        catalogHref={`/${locale}/catalog`}
         cartHref={`/${locale}/cart`}
         labels={{
           siteName: common("siteName"),
+          catalog: common("catalog"),
           cart: common("cart")
         }}
       />

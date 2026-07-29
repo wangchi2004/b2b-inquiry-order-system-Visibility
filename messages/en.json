@@ -2,6 +2,7 @@
   "Common": {
     "siteName": "B2B Inquiry Order System",
     "home": "Home",
+    "catalog": "Catalog",
     "cart": "Inquiry List",
     "continueShopping": "Continue Shopping",
     "email": "Email",
@@ -25,6 +26,7 @@
     "enterTitle": "Enter Product Page",
     "enterDescription": "Please fill in your email and country first. No account or password is required.",
     "enterButton": "Enter Product Page",
+    "viewCatalog": "Catalog Center",
     "viewSamples": "View Samples",
     "photoWallTitle": "Photo Wall",
     "photoWallDescription": "Click any photo to view it larger.",

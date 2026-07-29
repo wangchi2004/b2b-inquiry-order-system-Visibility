@@ -2,6 +2,7 @@
   "Common": {
     "siteName": "B2B 询盘订货系统",
     "home": "首页",
+    "catalog": "样本中心",
     "cart": "询盘清单",
     "continueShopping": "继续选购",
     "email": "电子邮件",
@@ -25,6 +26,7 @@
     "enterTitle": "进入产品页面",
     "enterDescription": "请先填写电子邮件和国家。不需要账号或密码。",
     "enterButton": "进入产品页面",
+    "viewCatalog": "Catalog / 样本中心",
     "viewSamples": "查看样本",
     "photoWallTitle": "照片墙",
     "photoWallDescription": "点击任意图片即可查看大图。",

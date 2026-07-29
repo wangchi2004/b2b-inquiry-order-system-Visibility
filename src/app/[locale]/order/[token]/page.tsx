@@ -122,9 +122,11 @@ export default async function LocalizedOrderPage({
       <OrderLinkSessionSync session={orderLinkSession} />
       <Header
         homeHref={`/${locale}`}
+        catalogHref={`/${locale}/catalog`}
         cartHref={`/${locale}/cart`}
         labels={{
           siteName: common("siteName"),
+          catalog: common("catalog"),
           cart: common("cart")
         }}
       />

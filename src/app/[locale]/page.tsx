@@ -23,9 +23,11 @@ export default async function LocalizedHomePage({
     <main className="min-h-screen">
       <Header
         homeHref={`/${locale}`}
+        catalogHref={`/${locale}/catalog`}
         cartHref={`/${locale}/cart`}
         labels={{
           siteName: common("siteName"),
+          catalog: common("catalog"),
           cart: common("cart")
         }}
       />
@@ -73,12 +75,20 @@ export default async function LocalizedHomePage({
               </p>
             </div>
           </div>
-          <Link
-            href={`/${locale}/samples`}
-            className="mt-2 inline-flex h-11 w-fit items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-          >
-            {home("viewSamples")}
-          </Link>
+          <div className="mt-2 flex flex-wrap gap-3">
+            <Link
+              href={`/${locale}/catalog`}
+              className="inline-flex h-11 items-center justify-center rounded bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              {home("viewCatalog")}
+            </Link>
+            <Link
+              href={`/${locale}/samples`}
+              className="inline-flex h-11 items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              {home("viewSamples")}
+            </Link>
+          </div>
         </div>
         <div>
           <h2 className="mb-3 text-xl font-semibold text-slate-950">

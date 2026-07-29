@@ -21,6 +21,7 @@ export default async function LocalizedCartPage({
       labels={{
         siteName: common("siteName"),
         home: common("home"),
+        catalog: common("catalog"),
         cart: common("cart"),
         title: cart("title"),
         continueShopping: common("continueShopping"),

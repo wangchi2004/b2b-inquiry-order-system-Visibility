@@ -2,6 +2,7 @@
   "Common": {
     "siteName": "B2B Inquiry Order System",
     "home": "ホーム",
+    "catalog": "カタログ",
     "cart": "お問い合わせリスト",
     "continueShopping": "商品選択を続ける",
     "email": "メール",
@@ -25,6 +26,7 @@
     "enterTitle": "商品ページへ",
     "enterDescription": "まずメールアドレスと国を入力してください。アカウントやパスワードは不要です。",
     "enterButton": "商品ページへ",
+    "viewCatalog": "カタログセンター",
     "viewSamples": "サンプルを見る",
     "photoWallTitle": "フォトウォール",
     "photoWallDescription": "写真をクリックすると大きく表示できます。",

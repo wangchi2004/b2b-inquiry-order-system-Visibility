@@ -40,6 +40,7 @@ type InquiryImageDraft = {
 export type CartPageLabels = {
   siteName?: string;
   home?: string;
+  catalog?: string;
   cart?: string;
   title?: string;
   continueShopping?: string;
@@ -368,9 +369,11 @@ export function CartPageContent({
     <main className="min-h-screen">
       <Header
         homeHref={locale ? `/${locale}` : "/"}
+        catalogHref={locale ? `/${locale}/catalog` : "/catalog"}
         cartHref={locale ? `/${locale}/cart` : "/cart"}
         labels={{
           siteName: labels?.siteName,
+          catalog: labels?.catalog,
           cart: labels?.cart
         }}
       />
