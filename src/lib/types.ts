@@ -8,6 +8,7 @@ export type OrderStatus = "submitted" | "confirmed" | "processing" | "cancelled"
 
 export type Product = {
   id: string;
+  category_id?: string | null;
   name: string;
   slug: string;
   category: string | null;

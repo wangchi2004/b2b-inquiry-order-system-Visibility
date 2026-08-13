@@ -31,7 +31,7 @@ export default async function LocalizedOrderPage({
   const catalog = await getTranslations("Catalog");
   const home = await getTranslations("Home");
   const staticCategoryNames = catalog.raw("categoryNames") as Record<string, string>;
-  const [{ products, categoryTranslations, error }, orderLink] = await Promise.all([
+  const [{ products, categoryTranslations, categoryTree, error }, orderLink] = await Promise.all([
     getActiveProductsWithVariants(locale),
     getOrderLinkByToken(token)
   ]);
@@ -71,6 +71,7 @@ export default async function LocalizedOrderPage({
       {products.length > 0 ? (
         <ProductCatalog
           products={products}
+          categoryTree={categoryTree}
           basePath={basePath}
           selectedCategory={category ?? "all"}
           searchQuery={q ?? ""}

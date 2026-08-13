@@ -4,12 +4,20 @@ import {
   hasSupabaseAdminConfig,
   hasSupabasePublicConfig
 } from "@/lib/supabase";
+import {
+  buildCategoryTree,
+  getCatalogCategories,
+  getCategoryNameMap,
+  getFallbackCategoryTree
+} from "@/lib/catalogCategories";
 import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/productCategories";
+import type { ProductCategoryNode } from "@/lib/productCategories";
 import type { ProductWithVariants } from "@/lib/types";
 
 type ProductsResult = {
   products: ProductWithVariants[];
   categoryTranslations: Record<string, string>;
+  categoryTree: ProductCategoryNode[];
   error: string | null;
 };
 
@@ -39,6 +47,7 @@ export async function getActiveProductsWithVariants(
     return {
       products: [],
       categoryTranslations: {},
+      categoryTree: getFallbackCategoryTree(),
       error: "Supabase is not configured yet. Add environment variables to load products."
     };
   }
@@ -56,6 +65,7 @@ export async function getActiveProductsWithVariants(
     return {
       products: [],
       categoryTranslations: {},
+      categoryTree: getFallbackCategoryTree(),
       error: productsError.message
     };
   }
@@ -67,6 +77,7 @@ export async function getActiveProductsWithVariants(
     return {
       products: [],
       categoryTranslations: {},
+      categoryTree: getFallbackCategoryTree(),
       error: null
     };
   }
@@ -80,6 +91,7 @@ export async function getActiveProductsWithVariants(
     return {
       products: [],
       categoryTranslations: {},
+      categoryTree: getFallbackCategoryTree(),
       error: variantsError.message
     };
   }
@@ -92,10 +104,11 @@ export async function getActiveProductsWithVariants(
     variantsByProductId.set(variant.product_id, variants);
   }
 
-  const [productTranslations, categoryTranslations] = await Promise.all([
+  const [productTranslations, categoryPresentation] = await Promise.all([
     getProductTranslations(productIds, locale),
-    getCategoryTranslations(products, locale)
+    getCategoryPresentation(products, locale)
   ]);
+  const categoryTranslations = categoryPresentation.names;
 
   const productsWithVariants = products.map((product) => {
     const translatedProduct = productTranslations.get(product.id);
@@ -115,7 +128,33 @@ export async function getActiveProductsWithVariants(
   return {
     products: productsWithVariants,
     categoryTranslations: Object.fromEntries(categoryTranslations.entries()),
+    categoryTree: categoryPresentation.tree,
     error: null
+  };
+}
+
+async function getCategoryPresentation(
+  products: Array<Pick<ProductWithVariants, "category">>,
+  locale: string
+) {
+  try {
+    const categories = await getCatalogCategories();
+
+    if (categories.length > 0) {
+      return {
+        tree: buildCategoryTree(categories),
+        names: new Map(Object.entries(getCategoryNameMap(categories, locale)))
+      };
+    }
+  } catch (error) {
+    console.warn("Database categories are not available yet", {
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+
+  return {
+    tree: getFallbackCategoryTree(),
+    names: await getCategoryTranslations(products, locale)
   };
 }
 

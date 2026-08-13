@@ -8,8 +8,21 @@ begin
 end;
 $$ language plpgsql;
 
+create table if not exists categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  slug text not null unique,
+  description text,
+  parent_id uuid references categories(id) on delete restrict,
+  sort_order integer not null default 0,
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists products (
   id uuid primary key default gen_random_uuid(),
+  category_id uuid references categories(id) on delete restrict,
   name text not null,
   slug text not null unique,
   category text,
@@ -57,6 +70,12 @@ create table if not exists category_translations (
   updated_at timestamptz not null default now(),
   unique (category_id, locale)
 );
+
+create index if not exists categories_parent_sort_idx
+  on categories(parent_id, sort_order, name);
+
+create index if not exists products_category_id_idx
+  on products(category_id);
 
 create table if not exists customers (
   id uuid primary key default gen_random_uuid(),

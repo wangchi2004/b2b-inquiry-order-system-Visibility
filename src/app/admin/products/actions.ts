@@ -24,13 +24,27 @@ export async function saveProduct(formData: FormData) {
   const productId = readString(formData.get("product_id"));
   const productName = readString(formData.get("name"));
   const submittedSlug = readString(formData.get("slug"));
+  const categorySelection = readString(formData.get("category_selection"));
+  const supabase = createSupabaseAdminClient();
+  const category = await resolveProductCategory(supabase, categorySelection).catch(
+    (error) =>
+      redirect(
+        adminProductsPath(
+          password,
+          error instanceof Error ? error.message : "Selected category was not found.",
+          returnCategory,
+          returnProduct
+        )
+      )
+  );
   const slug = productId
     ? submittedSlug
     : buildNewProductSlug(productName);
   const payload = {
     name: productName,
     slug,
-    category: normalizeNullableCategory(formData.get("category")),
+    category: category.name,
+    category_id: category.id,
     description: nullableString(formData.get("description")),
     image_url: nullableString(formData.get("image_url")),
     image_url_2: nullableString(formData.get("image_url_2")),
@@ -65,7 +79,6 @@ export async function saveProduct(formData: FormData) {
     );
   }
 
-  const supabase = createSupabaseAdminClient();
   const { error } = productId
     ? await supabase.from("products").update(payload).eq("id", productId)
     : await supabase.from("products").insert(payload);
@@ -84,6 +97,32 @@ export async function saveProduct(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
+}
+
+async function resolveProductCategory(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  selection: string
+) {
+  if (!selection) {
+    return { id: null, name: null };
+  }
+
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(selection)) {
+    return { id: null, name: normalizeProductCategory(selection) || null };
+  }
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id,name")
+    .eq("id", selection)
+    .eq("status", "active")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Selected category was not found.");
+  }
+
+  return { id: data.id, name: data.name };
 }
 
 async function uploadProductImages(
@@ -459,13 +498,6 @@ function nullableString(value: FormDataEntryValue | null) {
   const text = readString(value);
 
   return text || null;
-}
-
-function normalizeNullableCategory(value: FormDataEntryValue | null) {
-  const text = readString(value);
-  const normalizedCategory = normalizeProductCategory(text);
-
-  return normalizedCategory || null;
 }
 
 function nullableNumber(value: FormDataEntryValue | null) {

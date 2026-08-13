@@ -13,7 +13,7 @@ type SamplePageProps = {
 
 export default async function SamplePage({ searchParams }: SamplePageProps) {
   const { category, q } = await searchParams;
-  const { products, error } = await getActiveProductsWithVariants("en");
+  const { products, categoryTree, error } = await getActiveProductsWithVariants("en");
 
   return (
     <main className="min-h-screen">
@@ -57,6 +57,7 @@ export default async function SamplePage({ searchParams }: SamplePageProps) {
         {products.length > 0 ? (
           <ProductCatalog
             products={products}
+            categoryTree={categoryTree}
             basePath="/samples"
             selectedCategory={category ?? "all"}
             searchQuery={q ?? ""}

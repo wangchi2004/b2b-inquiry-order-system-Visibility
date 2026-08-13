@@ -20,7 +20,7 @@ type OrderPageProps = {
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   const { token } = await params;
   const { category, q } = await searchParams;
-  const [{ products, error }, orderLink] = await Promise.all([
+  const [{ products, categoryTree, error }, orderLink] = await Promise.all([
     getActiveProductsWithVariants(),
     getOrderLinkByToken(token)
   ]);
@@ -59,6 +59,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       {products.length > 0 ? (
         <ProductCatalog
           products={products}
+          categoryTree={categoryTree}
           basePath={`/order/${encodeURIComponent(token)}`}
           selectedCategory={category ?? "all"}
           searchQuery={q ?? ""}

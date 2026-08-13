@@ -12,6 +12,7 @@ import type { ProductWithVariants } from "@/lib/types";
 
 type ProductCatalogProps = {
   products: ProductWithVariants[];
+  categoryTree?: ProductCategoryNode[];
   basePath: string;
   selectedCategory?: string;
   searchQuery?: string;
@@ -34,6 +35,7 @@ export type ProductCatalogLabels = {
 
 export function ProductCatalog({
   products,
+  categoryTree = PRODUCT_CATEGORY_TREE,
   basePath,
   selectedCategory = "all",
   searchQuery = "",
@@ -42,10 +44,10 @@ export function ProductCatalog({
 }: ProductCatalogProps) {
   const normalizedSearchQuery = searchQuery.trim();
   const filteredProducts = products.filter((product) =>
-    matchesCategory(product, selectedCategory) &&
+    matchesCategory(product, selectedCategory, categoryTree) &&
     matchesSearch(product, normalizedSearchQuery)
   );
-  const categoryCounts = getCategoryCounts(products);
+  const categoryCounts = getCategoryCounts(products, categoryTree);
 
   return (
     <div className="grid grid-cols-[118px_minmax(0,1fr)] gap-3 sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[240px_1fr] lg:gap-6">
@@ -57,6 +59,7 @@ export function ProductCatalog({
           categoryCounts={categoryCounts}
           totalCount={products.length}
           labels={labels}
+          categoryTree={categoryTree}
         />
       </aside>
 
@@ -139,7 +142,8 @@ function CategoryNav({
   searchQuery,
   categoryCounts,
   totalCount,
-  labels
+  labels,
+  categoryTree
 }: {
   basePath: string;
   selectedCategory: string;
@@ -147,8 +151,9 @@ function CategoryNav({
   categoryCounts: Map<string, number>;
   totalCount: number;
   labels?: ProductCatalogLabels;
+  categoryTree: ProductCategoryNode[];
 }) {
-  const otherCategories = getOtherCategories(categoryCounts);
+  const otherCategories = getOtherCategories(categoryCounts, categoryTree);
 
   return (
     <nav className="space-y-1 text-xs sm:text-sm lg:space-y-2">
@@ -161,7 +166,7 @@ function CategoryNav({
         label={labels?.all ?? "All"}
         count={totalCount}
       />
-      {PRODUCT_CATEGORY_TREE.map((category) => (
+      {categoryTree.map((category) => (
         <CategoryTreeLink
           key={category.name}
           node={category}
@@ -287,14 +292,17 @@ function catalogHref(basePath: string, category: string, searchQuery: string) {
   return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
-function getCategoryCounts(products: ProductWithVariants[]) {
+function getCategoryCounts(
+  products: ProductWithVariants[],
+  categoryTree: ProductCategoryNode[]
+) {
   const counts = new Map<string, number>();
 
   for (const product of products) {
     const category = normalizeProductCategory(product.category) || "Uncategorized";
     counts.set(category, (counts.get(category) ?? 0) + 1);
 
-    for (const parentCategory of getCategoryAncestorNames(category)) {
+    for (const parentCategory of getCategoryAncestorNames(category, categoryTree)) {
       counts.set(parentCategory, (counts.get(parentCategory) ?? 0) + 1);
     }
   }
@@ -302,15 +310,22 @@ function getCategoryCounts(products: ProductWithVariants[]) {
   return counts;
 }
 
-function getOtherCategories(categoryCounts: Map<string, number>) {
-  const knownCategories = getKnownCategorySet();
+function getOtherCategories(
+  categoryCounts: Map<string, number>,
+  categoryTree: ProductCategoryNode[]
+) {
+  const knownCategories = getKnownCategorySet(categoryTree);
   return Array.from(categoryCounts.keys())
     .filter((category) => !knownCategories.has(category))
     .sort((a, b) => a.localeCompare(b));
 }
 
-function matchesCategory(product: ProductWithVariants, selectedCategory: string) {
-  return categoryMatchesSelection(product.category, selectedCategory);
+function matchesCategory(
+  product: ProductWithVariants,
+  selectedCategory: string,
+  categoryTree: ProductCategoryNode[]
+) {
+  return categoryMatchesSelection(product.category, selectedCategory, categoryTree);
 }
 
 function matchesSearch(product: ProductWithVariants, searchQuery: string) {

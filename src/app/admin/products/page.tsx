@@ -7,8 +7,11 @@ import { ProductSaveButton } from "@/components/ProductSaveButton";
 import { checkAdminAccess } from "@/lib/admin";
 import { getAdminProducts } from "@/lib/adminProducts";
 import {
-  PRODUCT_CATEGORY_OPTIONS,
-  PRODUCT_CATEGORY_TREE,
+  buildCategoryTree,
+  getCatalogCategories,
+  getFallbackCategoryTree
+} from "@/lib/catalogCategories";
+import {
   categoryMatchesSelection,
   getCategoryAncestorNames,
   getKnownCategorySet,
@@ -75,14 +78,20 @@ export default async function AdminProductsPage({
     return <AdminAccessMessage reason={access.reason} />;
   }
 
-  const products = await getAdminProducts();
+  const [products, databaseCategories] = await Promise.all([
+    getAdminProducts(),
+    getCatalogCategories({ includeInactive: true }).catch(() => [])
+  ]);
+  const categoryTree = databaseCategories.length
+    ? buildCategoryTree(databaseCategories)
+    : getFallbackCategoryTree();
   const selectedCategory = category ?? "all";
-  const categories = getProductCategories(products);
+  const categories = getProductCategories(products, categoryTree);
   const filteredProducts =
     selectedCategory === "all"
       ? products
       : products.filter((product) =>
-          categoryMatchesSelection(product.category, selectedCategory)
+          categoryMatchesSelection(product.category, selectedCategory, categoryTree)
         );
   const selectedProduct = selectedProductId
     ? products.find((product) => product.id === selectedProductId)
@@ -92,12 +101,20 @@ export default async function AdminProductsPage({
     <main className="min-h-screen">
       <Header />
       <section className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
-        <div className="mb-6">
-          <p className="text-sm text-slate-500">Admin / 后台</p>
-          <h1 className="text-3xl font-semibold text-slate-950">Products / 产品管理</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Manage products, active status, and product specifications. 管理产品、上下架状态和规格。
-          </p>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm text-slate-500">Admin / 后台</p>
+            <h1 className="text-3xl font-semibold text-slate-950">Products / 产品管理</h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Manage products, active status, and product specifications. 管理产品、上下架状态和规格。
+            </p>
+          </div>
+          <Link
+            href={`/admin/categories?password=${encodeURIComponent(access.password)}`}
+            className="inline-flex h-10 items-center justify-center rounded border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800"
+          >
+            Category Directory / 分类目录管理
+          </Link>
         </div>
 
         {message ? (
@@ -122,7 +139,7 @@ export default async function AdminProductsPage({
 
         <section className="rounded border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-slate-950">New Product / 新增产品</h2>
-          <ProductForm password={access.password} />
+          <ProductForm password={access.password} categoryTree={categoryTree} />
         </section>
 
         <section className="mt-6">
@@ -146,7 +163,7 @@ export default async function AdminProductsPage({
                     label="All / 全部"
                     count={products.length}
                   />
-                  {PRODUCT_CATEGORY_TREE.map((item) => (
+                  {categoryTree.map((item) => (
                     <CategoryTreeLink
                       key={item.name}
                       node={item}
@@ -155,7 +172,7 @@ export default async function AdminProductsPage({
                       categories={categories}
                     />
                   ))}
-                  {getOtherCategories(categories).map((item) => (
+                  {getOtherCategories(categories, categoryTree).map((item) => (
                     <CategoryLink
                       key={item}
                       href={adminProductsHref(access.password, item)}
@@ -182,6 +199,7 @@ export default async function AdminProductsPage({
                     password={access.password}
                     product={selectedProduct}
                     selectedCategory={selectedCategory}
+                    categoryTree={categoryTree}
                   />
                 ) : (
                   <div className="grid gap-2">
@@ -292,14 +310,17 @@ function CategoryTreeLink({
   );
 }
 
-function getProductCategories(products: ProductWithVariants[]) {
+function getProductCategories(
+  products: ProductWithVariants[],
+  categoryTree: ProductCategoryNode[]
+) {
   const counts = new Map<string, number>();
 
   for (const product of products) {
     const category = normalizeProductCategory(product.category) || "Uncategorized";
     counts.set(category, (counts.get(category) ?? 0) + 1);
 
-    for (const parentCategory of getCategoryAncestorNames(category)) {
+    for (const parentCategory of getCategoryAncestorNames(category, categoryTree)) {
       counts.set(parentCategory, (counts.get(parentCategory) ?? 0) + 1);
     }
   }
@@ -307,8 +328,11 @@ function getProductCategories(products: ProductWithVariants[]) {
   return counts;
 }
 
-function getOtherCategories(categoryCounts: Map<string, number>) {
-  const knownCategories = getKnownCategorySet();
+function getOtherCategories(
+  categoryCounts: Map<string, number>,
+  categoryTree: ProductCategoryNode[]
+) {
+  const knownCategories = getKnownCategorySet(categoryTree);
   return Array.from(categoryCounts.keys())
     .filter((category) => !knownCategories.has(category))
     .sort((a, b) => a.localeCompare(b));
@@ -391,11 +415,13 @@ function ProductListRow({
 function ProductAdminPanel({
   password,
   product,
-  selectedCategory
+  selectedCategory,
+  categoryTree
 }: {
   password: string;
   product: ProductWithVariants;
   selectedCategory: string;
+  categoryTree: ProductCategoryNode[];
 }) {
   const nextStatus = product.status === "active" ? "inactive" : "active";
   const bulkFormId = `save-all-variants-${product.id}`;
@@ -453,6 +479,7 @@ function ProductAdminPanel({
             password={password}
             product={product}
             selectedCategory={selectedCategory}
+            categoryTree={categoryTree}
           />
         </section>
 
@@ -634,11 +661,13 @@ function ProductAdminPanel({
 function ProductForm({
   password,
   product,
-  selectedCategory
+  selectedCategory,
+  categoryTree
 }: {
   password: string;
   product?: ProductWithVariants;
   selectedCategory?: string;
+  categoryTree: ProductCategoryNode[];
 }) {
   return (
     <form
@@ -659,7 +688,11 @@ function ProductForm({
           </span>
         ) : null}
       </div>
-      <CategorySelect defaultValue={product?.category} />
+      <CategorySelect
+        defaultValue={product?.category}
+        defaultId={product?.category_id}
+        categoryTree={categoryTree}
+      />
       <div className="grid gap-1.5 md:col-span-2 md:grid-cols-3">
         <ProductImageUploadCard
           label="Main image"
@@ -715,27 +748,30 @@ function ProductForm({
   );
 }
 
-function CategorySelect({ defaultValue }: { defaultValue?: string | null }) {
+function CategorySelect({
+  defaultValue,
+  defaultId,
+  categoryTree
+}: {
+  defaultValue?: string | null;
+  defaultId?: string | null;
+  categoryTree: ProductCategoryNode[];
+}) {
   const selectedValue = normalizeProductCategory(defaultValue) ?? "";
-  const options = selectedValue && !PRODUCT_CATEGORY_OPTIONS.includes(selectedValue)
-    ? [selectedValue, ...PRODUCT_CATEGORY_OPTIONS]
-    : [];
+  const knownNames = getKnownCategorySet(categoryTree);
+  const legacyValue = selectedValue && !knownNames.has(selectedValue) ? selectedValue : "";
 
   return (
     <label className="block text-xs font-medium text-slate-700">
       category / 分类
       <select
-        name="category"
-        defaultValue={selectedValue}
+        name="category_selection"
+        defaultValue={defaultId || selectedValue}
         className="mt-0.5 h-7 w-full rounded border border-slate-300 px-2 text-[11px] outline-none focus:border-slate-500"
       >
         <option value="">Select category / 选择分类</option>
-        {options.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-        {PRODUCT_CATEGORY_TREE.flatMap((category) =>
+        {legacyValue ? <option value={legacyValue}>{legacyValue}</option> : null}
+        {categoryTree.flatMap((category) =>
           renderCategoryOptions(category)
         )}
       </select>
@@ -745,7 +781,11 @@ function CategorySelect({ defaultValue }: { defaultValue?: string | null }) {
 
 function renderCategoryOptions(category: ProductCategoryNode, level = 0): ReactNode[] {
   return [
-    <option key={category.name} value={category.name}>
+    <option
+      key={category.id ?? category.name}
+      value={category.id ?? category.name}
+      disabled={category.status === "inactive"}
+    >
       {level > 0 ? `${"— ".repeat(level)}${category.name}` : category.name}
     </option>,
     ...(category.children ?? []).flatMap((childCategory) =>

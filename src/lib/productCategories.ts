@@ -1,5 +1,9 @@
 export type ProductCategoryNode = {
+  id?: string;
   name: string;
+  slug?: string;
+  status?: "active" | "inactive";
+  translations?: Record<string, string>;
   children?: ProductCategoryNode[];
 };
 
@@ -85,7 +89,8 @@ export function normalizeProductCategory(value: string | null | undefined) {
 
 export function categoryMatchesSelection(
   productCategory: string | null | undefined,
-  selectedCategory: string
+  selectedCategory: string,
+  tree: ProductCategoryNode[] = PRODUCT_CATEGORY_TREE
 ) {
   if (selectedCategory === "all") {
     return true;
@@ -101,30 +106,47 @@ export function categoryMatchesSelection(
     return true;
   }
 
-  const selectedNode = findCategoryNode(selectedCategory);
+  const selectedNode = findCategoryNode(selectedCategory, tree);
 
   return selectedNode ? categoryNodeIncludes(selectedNode, normalizedProductCategory) : false;
 }
 
-export function getCategoryGroupName(category: string | null | undefined) {
+export function getCategoryGroupName(
+  category: string | null | undefined,
+  tree: ProductCategoryNode[] = PRODUCT_CATEGORY_TREE
+) {
   const normalizedCategory = normalizeProductCategory(category);
-  const parentNode = findCategoryParent(normalizedCategory);
+  const parentNode = findCategoryParent(normalizedCategory, tree);
 
   return parentNode?.name ?? normalizedCategory;
 }
 
-export function getCategoryAncestorNames(category: string | null | undefined) {
+export function getCategoryAncestorNames(
+  category: string | null | undefined,
+  tree: ProductCategoryNode[] = PRODUCT_CATEGORY_TREE
+) {
   const normalizedCategory = normalizeProductCategory(category);
 
   if (!normalizedCategory) {
     return [];
   }
 
-  return findCategoryPath(normalizedCategory).slice(0, -1);
+  return findCategoryPath(normalizedCategory, tree).slice(0, -1);
 }
 
-export function getKnownCategorySet() {
-  return new Set(PRODUCT_CATEGORY_OPTIONS);
+export function getKnownCategorySet(
+  tree: ProductCategoryNode[] = PRODUCT_CATEGORY_TREE
+) {
+  return new Set(flattenCategoryNames(tree));
+}
+
+export function flattenCategoryTree(
+  nodes: ProductCategoryNode[]
+): ProductCategoryNode[] {
+  return nodes.flatMap((node) => [
+    node,
+    ...flattenCategoryTree(node.children ?? [])
+  ]);
 }
 
 function flattenCategoryNames(nodes: ProductCategoryNode[]): string[] {
@@ -134,8 +156,11 @@ function flattenCategoryNames(nodes: ProductCategoryNode[]): string[] {
   ]);
 }
 
-function findCategoryNode(name: string): ProductCategoryNode | null {
-  return findCategoryNodeInTree(PRODUCT_CATEGORY_TREE, name);
+function findCategoryNode(
+  name: string,
+  tree: ProductCategoryNode[]
+): ProductCategoryNode | null {
+  return findCategoryNodeInTree(tree, name);
 }
 
 function findCategoryNodeInTree(
@@ -164,8 +189,11 @@ function categoryNodeIncludes(node: ProductCategoryNode, category: string): bool
   ) ?? false;
 }
 
-function findCategoryParent(name: string): ProductCategoryNode | null {
-  return findCategoryParentInTree(PRODUCT_CATEGORY_TREE, name);
+function findCategoryParent(
+  name: string,
+  tree: ProductCategoryNode[]
+): ProductCategoryNode | null {
+  return findCategoryParentInTree(tree, name);
 }
 
 function findCategoryParentInTree(
@@ -188,8 +216,8 @@ function findCategoryParentInTree(
   return null;
 }
 
-function findCategoryPath(name: string): string[] {
-  return findCategoryPathInTree(PRODUCT_CATEGORY_TREE, name) ?? [];
+function findCategoryPath(name: string, tree: ProductCategoryNode[]): string[] {
+  return findCategoryPathInTree(tree, name) ?? [];
 }
 
 function findCategoryPathInTree(
