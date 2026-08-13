@@ -264,12 +264,6 @@ function SendEmailView({
               {eligibility?.allowed
                 ? "Ready to send. / 可以发送。"
                 : eligibility?.reason ?? "Campaign schema is not ready."}
-              {eligibility?.cooldownEndsAt ? (
-                <p className="mt-1">
-                  Available after / 可再次发送：
-                  {formatDateTime(eligibility.cooldownEndsAt)}
-                </p>
-              ) : null}
             </div>
 
             <form action={sendEmailCampaign} className="mt-5">
@@ -290,10 +284,6 @@ function SendEmailView({
                 disabled={!canSend}
               />
             </form>
-            <p className="mt-3 text-xs leading-5 text-slate-500">
-              Successful sends start a 15-day cooldown. Failed sends do not.
-              成功发送后 15 天内不能重复发送，失败不计入。
-            </p>
           </aside>
         </section>
       ) : (
@@ -751,8 +741,7 @@ async function getEligibilitySafely(
   if (schemaMissing) {
     return {
       allowed: false,
-      reason: "Campaign database migration is required.",
-      cooldownEndsAt: null
+      reason: "Campaign database migration is required."
     };
   }
 
@@ -766,8 +755,7 @@ async function getEligibilitySafely(
   } catch (error) {
     return {
       allowed: false,
-      reason: error instanceof Error ? error.message : "Eligibility check failed.",
-      cooldownEndsAt: null
+      reason: error instanceof Error ? error.message : "Eligibility check failed."
     };
   }
 }

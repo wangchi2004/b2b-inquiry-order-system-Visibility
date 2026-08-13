@@ -129,44 +129,17 @@ export async function getAdminCampaignSendLogs(limit = 100) {
   return (data ?? []) as AdminCampaignSendLog[];
 }
 
-export async function getLastSuccessfulCampaignSend(email: string | null) {
-  const normalizedEmail = email?.trim().toLocaleLowerCase();
-
-  if (!normalizedEmail) {
-    return null;
-  }
-
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("email_send_logs")
-    .select("sent_at")
-    .eq("status", "success")
-    .ilike("recipient_email", normalizedEmail)
-    .order("sent_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data?.sent_at ?? null;
-}
-
 export async function getCampaignEligibilityForCustomer(customer: {
   email: string | null;
   email_valid: boolean | null;
   unsubscribed: boolean | null;
   status: string | null;
 }) {
-  const lastSuccessfulSendAt = await getLastSuccessfulCampaignSend(customer.email);
-
   return getCampaignSendEligibility({
     email: customer.email,
     emailValid: customer.email_valid,
     unsubscribed: customer.unsubscribed,
-    status: customer.status,
-    lastSuccessfulSendAt
+    status: customer.status
   });
 }
 

@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  EMAIL_COOLDOWN_DAYS,
   getCampaignSendEligibility,
-  isCampaignCooldownExempt,
   renderCampaignEmail,
   selectCampaignTemplate,
   type CampaignTemplate
@@ -67,20 +65,25 @@ test("blocks invalid, unsubscribed, and do-not-contact customers", () => {
       email: "not-an-email",
       emailValid: true,
       unsubscribed: false,
-      status: "prospecting",
-      lastSuccessfulSendAt: null,
-      now: new Date("2026-06-21T00:00:00Z")
+      status: "prospecting"
     }).allowed,
     false
   );
   assert.equal(
     getCampaignSendEligibility({
       email: "buyer@example.com",
+      emailValid: false,
+      unsubscribed: false,
+      status: "prospecting"
+    }).reason,
+    "Customer email is marked invalid."
+  );
+  assert.equal(
+    getCampaignSendEligibility({
+      email: "buyer@example.com",
       emailValid: true,
       unsubscribed: true,
-      status: "prospecting",
-      lastSuccessfulSendAt: null,
-      now: new Date("2026-06-21T00:00:00Z")
+      status: "prospecting"
     }).reason,
     "Customer has unsubscribed."
   );
@@ -89,39 +92,18 @@ test("blocks invalid, unsubscribed, and do-not-contact customers", () => {
       email: "buyer@example.com",
       emailValid: true,
       unsubscribed: false,
-      status: "do_not_contact",
-      lastSuccessfulSendAt: null,
-      now: new Date("2026-06-21T00:00:00Z")
+      status: "do_not_contact"
     }).reason,
     "Customer is marked do not contact."
   );
 });
 
-test("blocks a successful send inside the cooldown window", () => {
+test("allows a valid contact without send-history gating", () => {
   const result = getCampaignSendEligibility({
     email: "buyer@example.com",
     emailValid: true,
     unsubscribed: false,
-    status: "prospecting",
-    lastSuccessfulSendAt: "2026-06-10T00:00:00Z",
-    now: new Date("2026-06-21T00:00:00Z")
-  });
-
-  assert.equal(result.allowed, false);
-  assert.match(result.reason ?? "", new RegExp(`${EMAIL_COOLDOWN_DAYS}`));
-});
-
-test("exempts only the configured owner email from cooldown", () => {
-  assert.equal(isCampaignCooldownExempt(" WANGCHI.2004@GMAIL.COM "), true);
-  assert.equal(isCampaignCooldownExempt("wangchi.2004@gmial.com"), false);
-
-  const result = getCampaignSendEligibility({
-    email: "wangchi.2004@gmail.com",
-    emailValid: true,
-    unsubscribed: false,
-    status: "prospecting",
-    lastSuccessfulSendAt: "2026-06-20T00:00:00Z",
-    now: new Date("2026-06-21T00:00:00Z")
+    status: "prospecting"
   });
 
   assert.equal(result.allowed, true);

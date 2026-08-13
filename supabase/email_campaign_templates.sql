@@ -135,17 +135,14 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended(normalized_email, 0));
 
-  if normalized_email <> 'wangchi.2004@gmail.com' and exists (
+  if exists (
     select 1
     from public.email_send_logs
     where lower(trim(recipient_email)) = normalized_email
-      and (
-        (status = 'success' and sent_at >= now() - interval '15 days')
-        or
-        (status = 'sending' and created_at >= now() - interval '15 minutes')
-      )
+      and status = 'sending'
+      and created_at >= now() - interval '15 minutes'
   ) then
-    raise exception 'EMAIL_COOLDOWN_ACTIVE';
+    raise exception 'EMAIL_SEND_IN_PROGRESS';
   end if;
 
   insert into public.email_send_logs (

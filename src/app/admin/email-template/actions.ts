@@ -254,8 +254,8 @@ export async function sendEmailCampaign(formData: FormData) {
   );
 
   if (reservationError || !logId) {
-    const message = reservationError?.message.includes("EMAIL_COOLDOWN_ACTIVE")
-      ? "This customer was emailed recently or another send is already in progress."
+    const message = reservationError?.message.includes("EMAIL_SEND_IN_PROGRESS")
+      ? "Another send to this customer is already in progress."
       : reservationError?.message ?? "Email send could not be reserved.";
 
     redirectToEmailPage(access.password, "send", message, {

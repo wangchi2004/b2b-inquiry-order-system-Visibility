@@ -1,6 +1,3 @@
-export const EMAIL_COOLDOWN_DAYS = 15;
-export const EMAIL_COOLDOWN_EXEMPT_ADDRESS = "wangchi.2004@gmail.com";
-
 export type CampaignTemplate = {
   id: string;
   name: string;
@@ -27,14 +24,11 @@ type EligibilityInput = {
   emailValid: boolean | null;
   unsubscribed: boolean | null;
   status: string | null;
-  lastSuccessfulSendAt: string | null;
-  now?: Date;
 };
 
 export type CampaignSendEligibility = {
   allowed: boolean;
   reason: string | null;
-  cooldownEndsAt: string | null;
 };
 
 export function normalizeCampaignCountry(value: string | null | undefined) {
@@ -73,17 +67,11 @@ export function selectCampaignTemplate<T extends CampaignTemplate>(
   );
 }
 
-export function isCampaignCooldownExempt(email: string | null | undefined) {
-  return normalizeEmail(email) === EMAIL_COOLDOWN_EXEMPT_ADDRESS;
-}
-
 export function getCampaignSendEligibility({
   email,
   emailValid,
   unsubscribed,
-  status,
-  lastSuccessfulSendAt,
-  now = new Date()
+  status
 }: EligibilityInput): CampaignSendEligibility {
   const normalizedEmail = normalizeEmail(email);
 
@@ -103,28 +91,9 @@ export function getCampaignSendEligibility({
     return denied("Customer is marked do not contact.");
   }
 
-  if (!isCampaignCooldownExempt(normalizedEmail) && lastSuccessfulSendAt) {
-    const lastSentAt = new Date(lastSuccessfulSendAt);
-
-    if (!Number.isNaN(lastSentAt.getTime())) {
-      const cooldownEndsAt = new Date(
-        lastSentAt.getTime() + EMAIL_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
-      );
-
-      if (cooldownEndsAt.getTime() > now.getTime()) {
-        return {
-          allowed: false,
-          reason: `A successful email was sent within the last ${EMAIL_COOLDOWN_DAYS} days.`,
-          cooldownEndsAt: cooldownEndsAt.toISOString()
-        };
-      }
-    }
-  }
-
   return {
     allowed: true,
-    reason: null,
-    cooldownEndsAt: null
+    reason: null
   };
 }
 
@@ -245,8 +214,7 @@ function normalizeImageUrl(value: string | null) {
 function denied(reason: string): CampaignSendEligibility {
   return {
     allowed: false,
-    reason,
-    cooldownEndsAt: null
+    reason
   };
 }
 
