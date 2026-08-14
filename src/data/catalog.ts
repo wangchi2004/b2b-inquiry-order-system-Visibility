@@ -1,93 +1,42 @@
-export const catalogCategories = [
-  "Soles",
-  "Leather & Heel",
-  "Adhesives",
-  "Fabrics & Insoles",
-  "Tools & Accessories"
-] as const;
+import "server-only";
 
-export type CatalogCategory = (typeof catalogCategories)[number];
+import { readdir } from "node:fs/promises";
+import path from "node:path";
 
 export type CatalogFile = {
-  id: string;
-  title: string;
-  category: CatalogCategory;
-  fileName: string;
-  updatedAt: string;
-  isNew: boolean;
+  name: string;
+  extension: string;
+  href: string;
 };
 
-export const catalogRelease = {
-  versionDate: "2026-07-28",
-  nextUpdateDate: "2026-08-12",
-  files: [
-    {
-      id: "luxury-sneaker-soles",
-      title: "Luxury Sneaker Replacement Soles",
-      category: "Soles",
-      fileName: "luxury-sneaker-soles.pdf",
-      updatedAt: "2026-07-28",
-      isNew: true
-    },
-    {
-      id: "rubber-sole-sheets",
-      title: "Rubber Sole Sheets & Colors",
-      category: "Soles",
-      fileName: "rubber-sole-sheets.pdf",
-      updatedAt: "2026-07-15",
-      isNew: false
-    },
-    {
-      id: "heel-repair-materials",
-      title: "Heel Repair Materials",
-      category: "Leather & Heel",
-      fileName: "heel-repair-materials.pdf",
-      updatedAt: "2026-07-28",
-      isNew: true
-    },
-    {
-      id: "leather-repair-sheets",
-      title: "Leather Repair Sheets",
-      category: "Leather & Heel",
-      fileName: "leather-repair-sheets.pdf",
-      updatedAt: "2026-07-28",
-      isNew: true
-    },
-    {
-      id: "shoe-repair-adhesives",
-      title: "Shoe Repair Adhesives",
-      category: "Adhesives",
-      fileName: "shoe-repair-adhesives.pdf",
-      updatedAt: "2026-07-15",
-      isNew: false
-    },
-    {
-      id: "sneaker-mesh-fabrics",
-      title: "Sneaker Mesh Fabrics",
-      category: "Fabrics & Insoles",
-      fileName: "sneaker-mesh-fabrics.pdf",
-      updatedAt: "2026-07-15",
-      isNew: false
-    },
-    {
-      id: "insoles-and-cushioning",
-      title: "Insoles & Cushioning Materials",
-      category: "Fabrics & Insoles",
-      fileName: "insoles-and-cushioning.pdf",
-      updatedAt: "2026-07-15",
-      isNew: false
-    },
-    {
-      id: "tools-and-accessories",
-      title: "Repair Tools & Accessories",
-      category: "Tools & Accessories",
-      fileName: "tools-and-accessories.pdf",
-      updatedAt: "2026-07-15",
-      isNew: false
+const catalogDirectory = path.join(process.cwd(), "public", "catalog-files");
+
+export async function getCatalogFiles(): Promise<CatalogFile[]> {
+  try {
+    const entries = await readdir(catalogDirectory, { withFileTypes: true });
+
+    return entries
+      .filter((entry) => entry.isFile() && !entry.name.startsWith("."))
+      .map((entry) => ({
+        name: entry.name,
+        extension: path.extname(entry.name).slice(1).toUpperCase() || "FILE",
+        href: `/catalog-files/${encodeURIComponent(entry.name)}`
+      }))
+      .sort((left, right) =>
+        left.name.localeCompare(right.name, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        })
+      );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return [];
     }
-  ] satisfies CatalogFile[]
-};
 
-export function getCatalogFileHref(fileName: string) {
-  return `/catalog-files/${fileName}`;
+    throw error;
+  }
 }
