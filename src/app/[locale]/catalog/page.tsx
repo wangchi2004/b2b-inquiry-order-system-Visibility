@@ -1,5 +1,7 @@
 import { CatalogCenter } from "@/components/CatalogCenter";
 
+export const dynamic = "force-dynamic";
+
 type LocalizedCatalogPageProps = {
   params: Promise<{
     locale: string;

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ConfirmCategoryDeleteButton } from "@/components/ConfirmCategoryDeleteButton";
 import { Header } from "@/components/Header";
+import { SampleFileManager } from "@/components/SampleFileManager";
+import { getCatalogFiles, type CatalogFile } from "@/data/catalog";
 import { checkAdminAccess } from "@/lib/admin";
 import {
   buildCategoryTree,
@@ -33,7 +35,9 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
   }
 
   let categories: CatalogCategory[] = [];
+  let sampleFiles: CatalogFile[] = [];
   let loadError: string | null = null;
+  let sampleFilesError: string | null = null;
 
   try {
     categories = await getCatalogCategories({
@@ -42,6 +46,14 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
     });
   } catch (error) {
     loadError = error instanceof Error ? error.message : "Categories failed to load.";
+  }
+
+  try {
+    sampleFiles = await getCatalogFiles();
+  } catch (error) {
+    sampleFilesError = error instanceof Error
+      ? error.message
+      : "Sample files failed to load.";
   }
 
   const tree = buildCategoryTree(categories);
@@ -80,6 +92,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
 
         {params.message ? <MessageBanner message={params.message} /> : null}
         {loadError ? <MessageBanner message={loadError} error /> : null}
+        {sampleFilesError ? <MessageBanner message={sampleFilesError} error /> : null}
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Metric label="Categories / 分类" value={String(categories.length)} />
@@ -242,6 +255,12 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
             ) : null}
           </section>
         </div>
+
+        <SampleFileManager
+          password={access.password}
+          files={sampleFiles}
+          returnCategoryId={selected?.id}
+        />
       </section>
     </main>
   );

@@ -1,42 +1,42 @@
 import "server-only";
 
-import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { SAMPLE_FILES_BUCKET } from "@/lib/sampleFileNames";
+import { createSupabaseAdminClient } from "@/lib/supabase";
 
 export type CatalogFile = {
   name: string;
   extension: string;
   href: string;
+  size: number | null;
+  updatedAt: string | null;
 };
 
-const catalogDirectory = path.join(process.cwd(), "public", "catalog-files");
-
 export async function getCatalogFiles(): Promise<CatalogFile[]> {
-  try {
-    const entries = await readdir(catalogDirectory, { withFileTypes: true });
+  const supabase = createSupabaseAdminClient();
+  const bucket = supabase.storage.from(SAMPLE_FILES_BUCKET);
+  const { data, error } = await bucket.list("", {
+    limit: 1000,
+    offset: 0,
+    sortBy: { column: "name", order: "asc" }
+  });
 
-    return entries
-      .filter((entry) => entry.isFile() && !entry.name.startsWith("."))
-      .map((entry) => ({
-        name: entry.name,
-        extension: path.extname(entry.name).slice(1).toUpperCase() || "FILE",
-        href: `/catalog-files/${encodeURIComponent(entry.name)}`
-      }))
-      .sort((left, right) =>
-        left.name.localeCompare(right.name, undefined, {
-          numeric: true,
-          sensitivity: "base"
-        })
-      );
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
-      return [];
-    }
-
-    throw error;
+  if (error) {
+    throw new Error(`Sample files failed to load: ${error.message}`);
   }
+
+  return data
+    .filter((file) => Boolean(file.id) && !file.name.startsWith("."))
+    .map((file) => ({
+      name: file.name,
+      extension: path.extname(file.name).slice(1).toUpperCase() || "FILE",
+      href: bucket.getPublicUrl(file.name, { download: file.name }).data.publicUrl,
+      size: readFileSize(file.metadata),
+      updatedAt: file.updated_at ?? null
+    }));
+}
+
+function readFileSize(metadata: Record<string, unknown> | null | undefined) {
+  const size = metadata?.size;
+  return typeof size === "number" && Number.isFinite(size) ? size : null;
 }

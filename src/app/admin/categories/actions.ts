@@ -3,7 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkAdminAccess } from "@/lib/admin";
+import {
+  isSafeSampleFileName,
+  MAX_SAMPLE_FILE_BYTES,
+  SAMPLE_FILES_BUCKET,
+  sanitizeSampleFileName
+} from "@/lib/sampleFileNames";
 import { createSupabaseAdminClient } from "@/lib/supabase";
+
+type SampleFileActionResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+type PreparedSampleUploadResult =
+  | { ok: true; path: string; token: string }
+  | { ok: false; error: string };
 
 export async function saveCatalogCategory(formData: FormData) {
   const access = requireAdmin(formData);
@@ -71,6 +85,110 @@ export async function deleteCatalogCategory(formData: FormData) {
   redirectToCategories(access.password, "Category deleted. / 分类已删除。");
 }
 
+export async function prepareSampleFileUpload(input: {
+  password: string;
+  fileName: string;
+  fileSize: number;
+}): Promise<PreparedSampleUploadResult> {
+  const access = checkAdminAccess(input.password);
+
+  if (!access.ok) {
+    return { ok: false, error: "Invalid admin password. / 管理员密码不正确。" };
+  }
+
+  const path = sanitizeSampleFileName(input.fileName);
+
+  if (!path) {
+    return { ok: false, error: "A valid file name is required. / 文件名无效。" };
+  }
+
+  if (
+    !Number.isFinite(input.fileSize) ||
+    input.fileSize <= 0 ||
+    input.fileSize > MAX_SAMPLE_FILE_BYTES
+  ) {
+    return { ok: false, error: "File must be 50MB or smaller. / 文件不能超过 50MB。" };
+  }
+
+  const { data, error } = await createSupabaseAdminClient()
+    .storage
+    .from(SAMPLE_FILES_BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+
+  if (error || !data?.token) {
+    return {
+      ok: false,
+      error: `Unable to prepare upload: ${error?.message ?? "No upload token returned."}`
+    };
+  }
+
+  return { ok: true, path, token: data.token };
+}
+
+export async function completeSampleFileUpload(input: {
+  password: string;
+  path: string;
+}): Promise<SampleFileActionResult> {
+  const access = checkAdminAccess(input.password);
+
+  if (!access.ok) {
+    return { ok: false, error: "Invalid admin password. / 管理员密码不正确。" };
+  }
+
+  if (!isSafeSampleFileName(input.path)) {
+    return { ok: false, error: "Invalid sample file path. / 样本文件路径无效。" };
+  }
+
+  const { data: exists, error } = await createSupabaseAdminClient()
+    .storage
+    .from(SAMPLE_FILES_BUCKET)
+    .exists(input.path);
+
+  if (error || !exists) {
+    return {
+      ok: false,
+      error: `Uploaded file could not be verified: ${error?.message ?? "File not found."}`
+    };
+  }
+
+  revalidateSamplePaths();
+  return { ok: true };
+}
+
+export async function deleteSampleFile(formData: FormData) {
+  const access = requireAdmin(formData);
+  const filePath = readString(formData.get("file_path"));
+  const returnCategoryId = nullableString(formData.get("return_category_id"));
+
+  if (!isSafeSampleFileName(filePath)) {
+    redirectToCategories(
+      access.password,
+      "Invalid sample file path. / 样本文件路径无效。",
+      returnCategoryId
+    );
+  }
+
+  const { error } = await createSupabaseAdminClient()
+    .storage
+    .from(SAMPLE_FILES_BUCKET)
+    .remove([filePath]);
+
+  if (error) {
+    redirectToCategories(
+      access.password,
+      `Sample file deletion failed: ${error.message}`,
+      returnCategoryId
+    );
+  }
+
+  revalidateSamplePaths();
+  redirectToCategories(
+    access.password,
+    "Sample file deleted. / 样本文件已删除。",
+    returnCategoryId
+  );
+}
+
 function requireAdmin(formData: FormData) {
   const access = checkAdminAccess(readString(formData.get("password")));
 
@@ -87,6 +205,12 @@ function revalidateCatalogPaths() {
   revalidatePath("/samples");
   revalidatePath("/order/[token]", "page");
   revalidatePath("/[locale]/order/[token]", "page");
+}
+
+function revalidateSamplePaths() {
+  revalidatePath("/admin/categories");
+  revalidatePath("/catalog");
+  revalidatePath("/[locale]/catalog", "page");
 }
 
 function redirectToCategories(
