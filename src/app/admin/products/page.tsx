@@ -530,6 +530,17 @@ function ProductAdminPanel({
                           <input type="hidden" name="return_product" value={product.id} />
                         </form>
                         {variant.sku}
+                        <div className="mt-2 min-w-32">
+                          <ProductImageUploadCard
+                            label={`尺寸图 / Size ${variant.size || variant.sku}`}
+                            fileField={`dimension_image_${variant.id}`}
+                            imageField="image_url"
+                            imageUrl={variant.dimension_image_url}
+                            productId={product.id}
+                            variantId={variant.id}
+                            password={password}
+                          />
+                        </div>
                       </td>
                       <td className="border border-slate-200 px-1 py-1 text-slate-700">
                         <input

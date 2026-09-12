@@ -283,6 +283,12 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
                       >
                         {variantLabel}
                       </div>
+                      {variant.dimension_image_url && (
+                        <a href={variant.dimension_image_url} target="_blank" rel="noreferrer" aria-label={`View size image for ${variantLabel}`} className="block border-b border-slate-200 bg-white p-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={variant.dimension_image_url} alt={`Dimensions — ${variantLabel}`} className="h-20 w-full object-contain" />
+                        </a>
+                      )}
                       <div className="grid h-7 grid-cols-[26px_1fr_26px]">
                         <button
                           type="button"

@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase";
 import { AdminOrderProductDetails } from "@/components/AdminOrderProductDetails";
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
 import { type AdminOrderItem, getAdminOrderById } from "@/lib/adminOrders";
-import { saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
+import { manageMobileOrder, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
 
 type AdminOrderDetailPageProps = {
   params: Promise<{
@@ -27,6 +28,7 @@ export default async function AdminOrderDetailPage({
   }
 
   const order = await getAdminOrderById(id);
+  const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id,shipping_carrier,tracking_number").eq("id", id).maybeSingle();
   const productGroups = groupOrderItemsByProduct(order.order_items);
   const inquiryImageUrls = [
     order.inquiry_image_url_1,
@@ -53,6 +55,17 @@ export default async function AdminOrderDetailPage({
           </Link>
         </div>
 
+        {mobileOrder?.mobile_user_id && <form action={manageMobileOrder} className="mb-6 rounded border border-emerald-200 bg-emerald-50 p-5">
+          <h2 className="mb-3 text-lg font-semibold">客户 App 订单 · 统一价格</h2>
+          <p className="mb-4 text-sm">商品金额保留下单时的价格。填写运费并发布报价后，客户可在 App 内确认。报价确认后不可修改。</p>
+          <input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/>
+          <div className="flex flex-wrap gap-3">
+            <input aria-label="Shipping fee USD" name="shipping_fee" type="number" min="0" step="0.01" placeholder="运费 USD" defaultValue={order.shipping_fee ?? ""} className="rounded border p-2"/>
+            <input aria-label="Shipping carrier" name="carrier" placeholder="物流公司" defaultValue={mobileOrder.shipping_carrier ?? ""} className="rounded border p-2"/>
+            <input aria-label="Tracking number" name="tracking" placeholder="物流单号" defaultValue={mobileOrder.tracking_number ?? ""} className="rounded border p-2"/>
+            {[["quote","发布报价"],["processing","开始备货"],["shipped","确认发货"],["completed","完成订单"],["cancelled","取消订单"]].map(([value,label]) => <button key={value} name="mobile_action" value={value} className="rounded bg-emerald-900 px-4 py-2 text-white">{label}</button>)}
+          </div>
+        </form>}
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <section className="rounded border border-slate-200 bg-white p-5">
             <h2 className="text-lg font-semibold text-slate-950">Customer</h2>
@@ -110,6 +123,7 @@ export default async function AdminOrderDetailPage({
               {message}
             </p>
           ) : null}
+          {mobileOrder?.mobile_user_id ? <div className="space-y-2">{order.order_items.map(item => <div key={item.id} className="rounded border p-3">{item.product_name} · {item.sku} · {item.quantity} × USD {item.unit_price ?? "—"}</div>)}</div> : (
           <AdminOrderProductDetails
             groups={productGroups}
             orderId={order.id}
@@ -132,6 +146,7 @@ export default async function AdminOrderDetailPage({
             saveAction={saveOrderQuote}
             sendEmailAction={sendQuoteReplyEmail}
           />
+          )}
         </section>
       </section>
     </main>

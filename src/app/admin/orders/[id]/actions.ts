@@ -88,6 +88,8 @@ export async function saveOrderItems(formData: FormData) {
     redirect(adminOrderPath(orderId, password, "Order ID is required."));
   }
 
+  const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id").eq("id", orderId).maybeSingle();
+  if (mobileOrder?.mobile_user_id) redirect(adminOrderPath(orderId, password, "App orders preserve catalog price snapshots. Use the App order controls."));
   const itemUpdates = readOrderItemUpdates(formData);
 
   if (itemUpdates.length === 0) {
@@ -244,6 +246,8 @@ async function persistQuote(
   }
 ) {
   const supabase = createSupabaseAdminClient();
+  const { data: mobileOrder } = await supabase.from("orders").select("mobile_user_id").eq("id", orderId).maybeSingle();
+  if (mobileOrder?.mobile_user_id) throw new Error("Use the App order controls to publish a quotation.");
   const { error } = await supabase
     .from("orders")
     .update({
@@ -557,4 +561,18 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+export async function manageMobileOrder(formData: FormData) {
+  const password = readString(formData.get("password"));
+  if (!checkAdminAccess(password).ok) redirect("/admin/orders");
+  const id = readString(formData.get("order_id"));
+  const action = readString(formData.get("mobile_action"));
+  const db = createSupabaseAdminClient();
+  const { error } = await db.rpc("manage_mobile_order", {
+    p_id: id, p_action: action, p_shipping: readMoney(formData.get("shipping_fee")),
+    p_carrier: readString(formData.get("carrier")), p_tracking: readString(formData.get("tracking"))
+  });
+  revalidatePath(`/admin/orders/${id}`);
+  redirect(adminOrderPath(id, password, error ? error.message : "App order updated."));
 }

@@ -27,6 +27,7 @@ export type Product = {
 };
 
 export type ProductVariant = {
+  dimension_image_url?: string | null;
   id: string;
   product_id: string;
   sku: string;

@@ -46,6 +46,7 @@ create table if not exists product_variants (
   unit text not null default 'piece',
   price numeric(12, 2),
   stock_status text not null default 'in_stock',
+  dimension_image_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

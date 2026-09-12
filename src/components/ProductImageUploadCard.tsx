@@ -12,6 +12,7 @@ type ProductImageUploadCardProps = {
   imageUrl?: string | null;
   password: string;
   productId?: string;
+  variantId?: string;
 };
 
 export function ProductImageUploadCard({
@@ -20,7 +21,8 @@ export function ProductImageUploadCard({
   imageField,
   imageUrl,
   password,
-  productId
+  productId,
+  variantId
 }: ProductImageUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState(imageUrl ?? "");
@@ -29,6 +31,7 @@ export function ProductImageUploadCard({
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState("");
 
+  const endpoint = variantId ? "/api/admin/variants/images" : "/api/admin/products/images";
   const previewUrl = localPreviewUrl || currentImageUrl;
 
   function handleDragOver(event: DragEvent<HTMLDivElement>) {
@@ -60,6 +63,7 @@ export function ProductImageUploadCard({
   }
 
   async function handleFile(file: File) {
+    if (isUploading) return;
     setMessage("");
 
     if (!file.type.startsWith("image/")) {
@@ -67,6 +71,15 @@ export function ProductImageUploadCard({
       return;
     }
 
+    if (variantId) {
+      // Dimension labels must remain legible; preserve the uploaded resolution.
+      if (file.size > 8 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        setMessage("Size image: JPG, PNG or WebP, maximum 8 MB.");
+        return;
+      }
+      await uploadImage(file);
+      return;
+    }
     setIsUploading(true);
     setMessage("Compressing image...");
 
@@ -93,16 +106,17 @@ export function ProductImageUploadCard({
 
   async function uploadImage(file: File, originalSize?: number) {
     setIsUploading(true);
-    setMessage("Uploading compressed image...");
+    setMessage(variantId ? "Uploading original size image..." : "Uploading compressed image...");
 
     try {
       const formData = new FormData();
       formData.append("password", password);
       formData.append("product_id", productId ?? "");
       formData.append("image_field", imageField);
+      if (variantId) formData.append("variant_id", variantId);
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/products/images", {
+      const response = await fetch(endpoint, {
         method: "POST",
         body: formData
       });
@@ -136,7 +150,7 @@ export function ProductImageUploadCard({
     setMessage("Deleting...");
 
     try {
-      const response = await fetch("/api/admin/products/images", {
+      const response = await fetch(endpoint, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json"
@@ -144,6 +158,7 @@ export function ProductImageUploadCard({
         body: JSON.stringify({
           password,
           productId,
+          variantId,
           imageField
         })
       });
@@ -167,7 +182,7 @@ export function ProductImageUploadCard({
 
   return (
     <div className="rounded border border-slate-200 bg-slate-50 p-1.5">
-      <input type="hidden" name={imageField} value={currentImageUrl} />
+      {!variantId && <input type="hidden" name={imageField} value={currentImageUrl} />}
       <div className="text-[11px] font-semibold text-slate-800">{label}</div>
       <div
         onDragOver={handleDragOver}
@@ -199,7 +214,8 @@ export function ProductImageUploadCard({
           ref={inputRef}
           name={productId ? undefined : fileField}
           type="file"
-          accept="image/*"
+          accept={variantId ? "image/jpeg,image/png,image/webp" : "image/*"}
+          disabled={isUploading}
           onChange={handleInputChange}
           className="mt-0.5 block w-full rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] file:mr-1.5 file:rounded file:border-0 file:bg-slate-950 file:px-2 file:py-1 file:text-[11px] file:font-semibold file:text-white"
         />

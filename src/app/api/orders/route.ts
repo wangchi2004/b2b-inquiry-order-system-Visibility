@@ -40,6 +40,7 @@ export async function POST(request: Request) {
 
   try {
     const supabase = createSupabaseAdminClient();
+    const pricedItems = await getPricedOrderItems(items);
     const linkedCustomerId = await getLinkedCustomerId(token);
     const customerRecord = await findOrSaveCustomer(customer, linkedCustomerId);
     const customerShippingDetails = await getCustomerShippingDetails(customerRecord.id);
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       return orderWriteError("Failed to create order.", orderError);
     }
 
-    const orderItems = items.map((item) => ({
+    const orderItems = pricedItems.map((item) => ({
       order_id: order.id,
       product_id: item.productId,
       variant_id: item.variantId,
@@ -71,7 +72,8 @@ export async function POST(request: Request) {
       size: item.size ?? null,
       color: item.color ?? null,
       quantity: item.quantity,
-      unit: item.unit ?? null
+      unit: item.unit ?? null,
+      unit_price: item.unitPrice
     }));
 
     const { error: orderItemsError } = await supabase
@@ -89,7 +91,6 @@ export async function POST(request: Request) {
       customer.inquiryImageUrls
     );
     const localeSaveWarning = await saveOrderLocale(order.id, locale);
-    const pricedItems = await getPricedOrderItems(items);
     const submittedAt = new Date().toISOString();
     const emailResult = await sendOrderNotificationEmails({
       orderId: order.id,
@@ -293,36 +294,21 @@ async function getPricedOrderItems(
   const variantIds = Array.from(new Set(items.map((item) => item.variantId)));
   const { data: variants, error } = await supabase
     .from("product_variants")
-    .select("id,price,products(image_url,image_url_2,image_url_3)")
+    .select("id,product_id,sku,size,color,unit,price,stock_status,products(name,status,image_url,image_url_2,image_url_3)")
     .in("id", variantIds);
-
-  if (error) {
-    console.warn("Failed to load variant prices for order email", {
-      error: error.message
-    });
-  }
-
-  const variantDetails = new Map(
-    (variants ?? []).map((variant) => [
-      String(variant.id),
-      {
-        price:
-          typeof variant.price === "number" ? variant.price : Number(variant.price),
-        imageUrl: readVariantImageUrl(variant.products)
-      }
-    ])
-  );
-
+  if (error) throw new Error("Unable to verify product prices. Please try again.");
   return items.map((item) => {
-    const detail = variantDetails.get(item.variantId);
-    const price = detail?.price;
-    const unitPrice =
-      typeof price === "number" && Number.isFinite(price) ? price : null;
-
+    const variant = variants?.find(v => String(v.id) === item.variantId);
+    const product = Array.isArray(variant?.products) ? variant.products[0] : variant?.products;
+    if (!variant || !product || String(variant.product_id) !== item.productId || product.status !== "active" || variant.stock_status === "out_of_stock" || !Number.isSafeInteger(item.quantity) || item.quantity > 100000) {
+      throw new Error("A selected product is unavailable. Please refresh your cart.");
+    }
+    const price = variant.price === null ? null : Number(variant.price);
+    const unitPrice = price !== null && Number.isFinite(price) && price >= 0 ? price : null;
     return {
-      ...item,
-      imageUrl: detail?.imageUrl,
-      unitPrice,
+      ...item, productName: product.name, sku: variant.sku, size: variant.size ?? undefined,
+      color: variant.color ?? undefined, unit: variant.unit,
+      imageUrl: readVariantImageUrl(product), unitPrice,
       lineTotal: unitPrice === null ? null : unitPrice * item.quantity
     };
   });

@@ -7,7 +7,7 @@ type UploadProductImageInput = {
   productName: string;
   productSlug: string;
   category?: string | null;
-  imageSlot: "main" | "secondary-1" | "secondary-2";
+  imageSlot: "main" | "secondary-1" | "secondary-2" | `variant-${string}`;
 };
 
 type UploadInquiryImageInput = {
@@ -199,6 +199,7 @@ function slugify(value: string) {
 }
 
 function imageSlotName(imageSlot: UploadProductImageInput["imageSlot"]) {
+  if (imageSlot.startsWith("variant-")) return `${slugify(imageSlot)}-dimensions`;
   if (imageSlot === "main") {
     return "main-image";
   }

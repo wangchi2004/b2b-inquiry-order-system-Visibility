@@ -21,6 +21,25 @@ function isLocalhost(hostname: string) {
 export default function proxy(request: NextRequest) {
   const { nextUrl } = request;
   const pathname = nextUrl.pathname;
+  if (pathname.startsWith("/api/mobile/")) {
+    const origin = request.headers.get("origin");
+    const allowedOrigins = new Set([
+      "https://www.wangchi2004.com",
+      "http://localhost:8087",
+      "http://127.0.0.1:8087",
+      ...(process.env.MOBILE_WEB_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean),
+    ]);
+    const response = request.method === "OPTIONS"
+      ? new NextResponse(null, { status: 204 })
+      : NextResponse.next();
+    if (origin && allowedOrigins.has(origin)) {
+      response.headers.set("Access-Control-Allow-Origin", origin);
+      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+      response.headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, Idempotency-Key");
+      response.headers.set("Vary", "Origin");
+    }
+    return response;
+  }
   const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
   const allowKey = process.env.ADMIN_ACCESS_KEY;
   const hasAllowBypass =
@@ -48,5 +67,5 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"]
+  matcher: ["/api/mobile/:path*", "/((?!api|_next|.*\\..*).*)"]
 };

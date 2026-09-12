@@ -5,6 +5,7 @@ const eslintConfig = [
   {
     ignores: [
       ".next/**",
+      "mobile/**",
       "node_modules/**",
       "customer_shipping_settlement/.venv/**",
       "customer_shipping_settlement/.venv-mac/**"
