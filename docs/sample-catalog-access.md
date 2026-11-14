@@ -20,3 +20,20 @@ after expiry the customer must sign in again.
 
 The public `/samples` product image gallery remains available. Customer registration,
 password recovery, and the mobile app's separate session are outside this change.
+
+## Password recovery
+
+The account page includes a reset-email form, and `/{locale}/reset-password`
+accepts the recovery session from the email link before allowing a password update.
+Add these exact URLs to Supabase Authentication → URL Configuration → Redirect URLs:
+
+- https://www.wangchi2004.com/en/reset-password
+- https://www.wangchi2004.com/zh/reset-password
+- https://www.wangchi2004.com/ja/reset-password
+- https://www.wangchi2004.com/ko/reset-password
+
+Also allow the corresponding localhost URLs for development. Reset emails must
+use the provider's recovery ConfirmationURL. Verify delivery and link handling
+with a test customer after deployment. No reset email is sent during code checks.
+Password recovery requires an existing customer auth account; inquiry contact
+records and administrator passwords are not customer auth accounts.
