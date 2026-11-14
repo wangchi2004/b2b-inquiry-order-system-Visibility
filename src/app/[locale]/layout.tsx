@@ -1,3 +1,4 @@
+import { ShopNavigation } from "@/components/storefront/ShopNavigation";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
@@ -27,5 +28,5 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  return <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>;
+  return <NextIntlClientProvider messages={messages}><div className="shop-page-spacing">{children}</div><ShopNavigation locale={locale} /></NextIntlClientProvider>;
 }

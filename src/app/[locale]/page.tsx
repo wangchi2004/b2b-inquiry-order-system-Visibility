@@ -1,6 +1,8 @@
+import { Storefront } from "@/components/storefront/Storefront";
+import { getStorefrontData } from "@/lib/storefront";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { Header } from "@/components/Header";
+import { ShopHeader } from "@/components/storefront/ShopNavigation";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 import { HomePhotoWall } from "@/components/HomePhotoWall";
 import { getHomeGalleryImages } from "@/lib/products";
@@ -11,34 +13,28 @@ type LocalizedHomePageProps = {
   }>;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function LocalizedHomePage({
   params
 }: LocalizedHomePageProps) {
   const { locale } = await params;
   const common = await getTranslations("Common");
   const home = await getTranslations("Home");
-  const galleryImages = await getHomeGalleryImages();
+  const [galleryImages, storefront] = await Promise.all([getHomeGalleryImages(), getStorefrontData(locale)]);
 
   return (
-    <main className="min-h-screen">
-      <Header
-        homeHref={`/${locale}`}
-        catalogHref={`/${locale}/catalog`}
-        cartHref={`/${locale}/cart`}
-        labels={{
-          siteName: common("siteName"),
-          catalog: common("catalog"),
-          cart: common("cart")
-        }}
-      />
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 py-16 lg:grid-cols-[1fr_420px] lg:items-start">
+    <main className="min-h-screen bg-white">
+      <ShopHeader locale={locale} />
+      <Storefront {...storefront} locale={locale} />
+      <section id="inquiry-access" className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="flex flex-col gap-4">
           <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
             {home("eyebrow")}
           </p>
-          <h1 className="text-4xl font-semibold text-slate-950">
+          <h2 className="text-4xl font-semibold text-slate-950">
             {home("title")}
-          </h1>
+          </h2>
           <p className="max-w-2xl text-base leading-7 text-slate-600">
             {home("description")}
           </p>
@@ -83,7 +79,7 @@ export default async function LocalizedHomePage({
               {home("viewCatalog")}
             </Link>
             <Link
-              href={`/${locale}/samples`}
+              href="/samples"
               className="inline-flex h-11 items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
             >
               {home("viewSamples")}

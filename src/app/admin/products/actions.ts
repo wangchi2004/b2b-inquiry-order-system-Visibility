@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { processProductEmbeddings } from "@/lib/embeddings/worker";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkAdminAccess } from "@/lib/admin";
@@ -94,6 +96,7 @@ export async function saveProduct(formData: FormData) {
     );
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
@@ -202,6 +205,7 @@ export async function toggleProductStatus(formData: FormData) {
     redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
@@ -241,6 +245,7 @@ export async function deleteProduct(formData: FormData) {
     redirect(adminProductsPath(password, error.message, returnCategory));
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory));
@@ -323,6 +328,7 @@ export async function saveProductVariant(formData: FormData) {
     );
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));
@@ -422,6 +428,7 @@ export async function saveProductVariantsBulk(formData: FormData) {
     }
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(
@@ -460,6 +467,7 @@ export async function deleteProductVariant(formData: FormData) {
     redirect(adminProductsPath(password, error.message, returnCategory, returnProduct));
   }
 
+  after(async () => { try { await processProductEmbeddings(5); } catch { console.error("Embedding background task unavailable; queued work will retry."); } });
   revalidatePath("/admin/products");
   revalidatePath("/order/[token]", "page");
   redirect(adminProductsPath(password, undefined, returnCategory, returnProduct));

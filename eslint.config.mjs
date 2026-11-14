@@ -8,7 +8,9 @@ const eslintConfig = [
       "mobile/**",
       "node_modules/**",
       "customer_shipping_settlement/.venv/**",
-      "customer_shipping_settlement/.venv-mac/**"
+      "customer_shipping_settlement/.venv-mac/**",
+      "**/.venv/**",
+      "**/.venv-mac/**"
     ]
   },
   ...nextVitals,

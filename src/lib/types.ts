@@ -7,6 +7,9 @@ export type OrderLinkStatus = "active" | "expired" | "disabled" | string;
 export type OrderStatus = "submitted" | "confirmed" | "processing" | "cancelled" | string;
 
 export type Product = {
+  size?: string | null;
+  moq?: number | null;
+  currency?: string | null;
   id: string;
   category_id?: string | null;
   name: string;

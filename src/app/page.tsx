@@ -1,23 +1,28 @@
-import { Header } from "@/components/Header";
+import { Storefront } from "@/components/storefront/Storefront";
+import { getStorefrontData } from "@/lib/storefront";
+import { ShopHeader, ShopNavigation } from "@/components/storefront/ShopNavigation";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 import { HomePhotoWall } from "@/components/HomePhotoWall";
 import { getHomeGalleryImages } from "@/lib/products";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
-  const galleryImages = await getHomeGalleryImages();
+  const [galleryImages, storefront] = await Promise.all([getHomeGalleryImages(), getStorefrontData("en")]);
 
   return (
-    <main className="min-h-screen">
-      <Header />
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 py-16 lg:grid-cols-[1fr_420px] lg:items-start">
+    <main className="min-h-screen bg-white shop-page-spacing">
+      <ShopHeader locale="en" />
+      <Storefront {...storefront} locale="en" />
+      <section id="inquiry-access" className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="flex flex-col gap-4">
         <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
           B2B export workflow
         </p>
-        <h1 className="text-4xl font-semibold text-slate-950">
+        <h2 className="text-4xl font-semibold text-slate-950">
           B2B Inquiry Order System
-        </h1>
+        </h2>
         <p className="max-w-2xl text-base leading-7 text-slate-600">
           A private inquiry ordering system for overseas customers to select
           products, submit quantities, and receive order confirmation by email.
@@ -61,7 +66,7 @@ export default async function HomePage() {
               Catalog Center
             </Link>
             <Link
-              href="/en/samples"
+              href="/samples"
               className="inline-flex h-11 items-center justify-center rounded border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
             >
               View Samples
@@ -93,6 +98,7 @@ export default async function HomePage() {
         </div>
       </section>
       <HomePhotoWall images={galleryImages} />
+      <ShopNavigation locale="en" />
     </main>
   );
 }

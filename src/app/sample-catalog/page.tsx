@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const pdfPath = "/downloads/sample-catalog.pdf";
 const siteUrl = "https://www.wangchi2004.com";
 const pdfUrl = `${siteUrl}${pdfPath}`;
@@ -14,12 +16,12 @@ export default function SampleCatalogPdfPage() {
             Share this page or the direct PDF file with customers by email. The PDF is for sample viewing only.
           </p>
         </div>
-        <a
+        <Link
           href="/"
           className="inline-flex h-11 items-center justify-center rounded border border-slate-300 px-5 text-sm font-semibold hover:bg-slate-50"
         >
           Home
-        </a>
+        </Link>
       </div>
 
       <section className="mt-8 rounded border border-slate-200 bg-white p-6 shadow-sm">
@@ -39,12 +41,12 @@ export default function SampleCatalogPdfPage() {
           >
             Download PDF
           </a>
-          <a
-            href="/en/samples"
+          <Link
+            href="/samples"
             className="inline-flex h-12 items-center justify-center rounded border border-slate-300 px-6 text-sm font-bold hover:bg-slate-50"
           >
             View Online Samples
-          </a>
+          </Link>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -68,7 +70,7 @@ Here is our shoe repair materials sample catalog PDF:
 ${pdfUrl}
 
 You can also view product samples online:
-${siteUrl}/en/samples
+${siteUrl}/samples
 
 If you are interested in any item, please send us the product name, size, color, and quantity.
 

@@ -10,3 +10,20 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Storefront shell: preserve the legacy/admin theme outside the new surface. */
+.shop-page-spacing { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); background: white; }
+.shop-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; border-top: 1px solid #e2e8f0; background: rgb(255 255 255 / 97%); padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: 0 -4px 24px rgb(15 23 42 / 4%); }
+.shop-dialog { position: fixed; inset: 0; margin: auto; width: calc(100% - 24px); max-height: calc(100dvh - 32px); overflow-y: auto; border: 0; border-radius: 16px; padding: 20px; color: #0f172a; background: white; }
+.shop-dialog::backdrop { background: rgb(15 23 42 / 60%); }
+body:has(.shop-dialog[open]) { overflow: hidden; }
+.shop-surface button, .shop-surface a, .shop-bottom-nav a { -webkit-tap-highlight-color: transparent; }
+.shop-surface :focus-visible, .shop-dialog :focus-visible, .shop-bottom-nav :focus-visible { outline: 2px solid #1d4ed8; outline-offset: 3px; }
+.shop-dialog input[inputmode="numeric"] { font-size: 16px; }
+.shop-dialog article button { min-height: 44px; min-width: 44px; }
+.shop-dialog article .w-24 { width: 144px; }
+.shop-dialog article .grid.h-7 { height: 44px; grid-template-columns: 44px 1fr 44px; }
+@media (prefers-reduced-motion: reduce) { .shop-surface * { transition: none !important; } }
+
+.product-purchase-bar { position: fixed; bottom: calc(65px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; z-index: 30; border-top: 1px solid #e2e8f0; background: white; padding: 12px 16px; }
+@media (min-width: 768px) { .product-purchase-bar { position: static; border: 0; padding: 0; } }

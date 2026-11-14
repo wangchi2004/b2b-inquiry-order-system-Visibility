@@ -226,7 +226,7 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-700">
               <span>{labels?.color ?? "Color"}: {product.color ?? "Custom"}</span>
               <span className="hidden text-slate-300 sm:inline">|</span>
-              <span>{labels?.moq ?? "MOQ"}: 1 {unitLabel}</span>
+              <span>{labels?.moq ?? "MOQ"}: {product.moq != null ? `${product.moq} ${unitLabel}` : "Confirm with seller"}</span>
               {sizeRange ? (
                 <>
                   <span className="hidden text-slate-300 sm:inline">|</span>
@@ -414,7 +414,7 @@ function getSizeRange(product: ProductWithVariants) {
   return sizes.join(", ");
 }
 
-function getPriceSummary(product: ProductWithVariants, pendingLabel: string) {
+export function getPriceSummary(product: ProductWithVariants, pendingLabel: string) {
   const prices = product.product_variants
     .map((variant) => variant.price)
     .filter(isPriced);
@@ -431,8 +431,8 @@ function getPriceSummary(product: ProductWithVariants, pendingLabel: string) {
 
   const uniquePrices = Array.from(new Set(prices));
   const priceLabel = uniquePrices.length === 1
-    ? formatMoney(uniquePrices[0])
-    : `From ${formatMoney(Math.min(...prices))}`;
+    ? formatMoney(uniquePrices[0], product.currency)
+    : `From ${formatMoney(Math.min(...prices), product.currency)}`;
 
   return {
     hasPrice: true,
@@ -442,10 +442,15 @@ function getPriceSummary(product: ProductWithVariants, pendingLabel: string) {
   };
 }
 
-function formatMoney(value: number) {
-  return `$${value.toFixed(2)}`;
+function formatMoney(value: number, currency?: string | null) {
+  const code = currency || "USD";
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(value);
+  } catch {
+    return `${code} ${value.toFixed(2)}`;
+  }
 }
 
 function isPriced(value: number | null | undefined): value is number {
-  return typeof value === "number" && Number.isFinite(value);
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
