@@ -1,5 +1,5 @@
 import { Storefront } from "@/components/storefront/Storefront";
-import { ShopHeader } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { getStorefrontData } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";

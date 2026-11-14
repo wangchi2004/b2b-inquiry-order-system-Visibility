@@ -24,8 +24,7 @@ to receive a refresh cookie. Passwords are never stored in browser storage.
 5. Verify an old `/storage/v1/object/public/sample-files/<filename>` URL no
    longer returns the file (including any previously cached copies).
 
-The public `/samples` product image gallery remains available. Customer registration,
-and the mobile app's separate session are outside this change.
+The public `/samples` product image gallery remains available. The mobile app uses a separate session.
 
 ## Password recovery
 
@@ -43,3 +42,14 @@ use the provider's recovery ConfirmationURL. Verify delivery and link handling
 with a test customer after deployment. No reset email is sent during code checks.
 Password recovery requires an existing customer auth account; inquiry contact
 records and administrator passwords are not customer auth accounts.
+
+
+## Header and registration
+
+The shared storefront header renders guest registration/sign-in buttons or the
+verified current account email. Account links lead to the personal center.
+Registration is at `/{locale}/register`; existing signed-in users are redirected
+to their account. New customers confirm their email before signing in. Add the
+four `https://www.wangchi2004.com/{locale}/account` URLs to the auth redirect
+allowlist, and enable email signups and confirmation in the auth provider.
+The register API uses the public auth client, never privileged account creation.

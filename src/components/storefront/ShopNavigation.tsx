@@ -41,14 +41,3 @@ export function ShopNavigation({ locale }: { locale: string }) {
     </div>
   </nav>;
 }
-export function ShopHeader({ locale }: { locale: string }) {
-  return <header className="border-b border-slate-100 bg-white">
-    <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-      <Link href={`/${locale}`} aria-label="Shoe repair materials home" className="flex min-h-11 items-center gap-2.5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-700 text-white"><ShopIcon name="box" /></span>
-        <span><span className="block text-lg font-bold tracking-tight text-slate-950">Shoe Repair Materials</span><span className="block text-xs text-slate-500">PARTS · MATERIALS · TOOLS</span></span>
-      </Link>
-      <Link href={`/${locale}/catalog`} className="flex min-h-11 items-center text-sm font-medium text-slate-600">Catalog</Link>
-    </div>
-  </header>;
-}

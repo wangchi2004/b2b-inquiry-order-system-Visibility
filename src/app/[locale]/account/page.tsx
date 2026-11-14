@@ -2,7 +2,7 @@ import { ForgotPassword } from "@/components/ForgotPassword";
 import { AccountLogin } from "@/components/AccountLogin";
 import { accountUser } from "@/lib/accountSession";
 import Link from "next/link";
-import { ShopHeader } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { ShopIcon } from "@/components/storefront/ShopIcon";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 

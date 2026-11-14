@@ -1,6 +1,7 @@
 import { Storefront } from "@/components/storefront/Storefront";
 import { getStorefrontData } from "@/lib/storefront";
-import { ShopHeader, ShopNavigation } from "@/components/storefront/ShopNavigation";
+import { ShopNavigation } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 import { HomePhotoWall } from "@/components/HomePhotoWall";
 import { getHomeGalleryImages } from "@/lib/products";

@@ -2,7 +2,7 @@ import { Storefront } from "@/components/storefront/Storefront";
 import { getStorefrontData } from "@/lib/storefront";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { ShopHeader } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { GeneralOrderEntryForm } from "@/components/GeneralOrderEntryForm";
 import { HomePhotoWall } from "@/components/HomePhotoWall";
 import { getHomeGalleryImages } from "@/lib/products";

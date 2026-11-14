@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ShopHeader } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { ProductDetailView } from "@/components/storefront/ProductDetailView";
 import { getProductDetail } from "@/lib/productDetail";
 

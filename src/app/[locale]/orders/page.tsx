@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShopHeader } from "@/components/storefront/ShopNavigation";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { ShopIcon } from "@/components/storefront/ShopIcon";
 
 export default async function OrdersPage({ params }: { params: Promise<{ locale: string }> }) {
