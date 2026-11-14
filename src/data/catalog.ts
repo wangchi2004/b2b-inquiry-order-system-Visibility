@@ -30,7 +30,7 @@ export async function getCatalogFiles(): Promise<CatalogFile[]> {
     .map((file) => ({
       name: file.name,
       extension: path.extname(file.name).slice(1).toUpperCase() || "FILE",
-      href: bucket.getPublicUrl(file.name, { download: file.name }).data.publicUrl,
+      href: `/api/catalog-files/${encodeURIComponent(file.name)}`,
       size: readFileSize(file.metadata),
       updatedAt: file.updated_at ?? null
     }));

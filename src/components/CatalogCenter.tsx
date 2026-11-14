@@ -1,3 +1,4 @@
+import { requireAccount } from "@/lib/accountSession";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { getCatalogFiles, type CatalogFile } from "@/data/catalog";
@@ -62,6 +63,7 @@ export async function CatalogCenter({ locale = "en" }: { locale?: string }) {
   const normalizedLocale: SupportedLocale =
     locale === "zh" || locale === "ja" || locale === "ko" ? locale : "en";
   const labels = copy[normalizedLocale];
+  await requireAccount(normalizedLocale);
   const files = await getCatalogFiles();
   const homeHref = `/${normalizedLocale}`;
 

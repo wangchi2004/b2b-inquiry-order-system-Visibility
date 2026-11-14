@@ -1,5 +1,4 @@
--- Public downloads are allowed by the bucket setting. Upload, list, and delete
--- operations remain server-only through the service role client.
+-- Private sample files: all reads and writes go through authenticated server routes.
 insert into storage.buckets (
   id,
   name,
@@ -10,7 +9,7 @@ insert into storage.buckets (
 values (
   'sample-files',
   'sample-files',
-  true,
+  false,
   52428800,
   null
 )
