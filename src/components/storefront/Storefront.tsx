@@ -55,7 +55,6 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
   const [selected, setSelected] = useState<ProductWithVariants | null>(null);
   const [notice, setNotice] = useState("");
   const productDialog = useRef<HTMLDialogElement>(null);
-  const imageDialog = useRef<HTMLDialogElement>(null);
   const noticeDialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     function restore() { setRecentIds(readRecentProducts()); }
@@ -122,12 +121,10 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
           <ShopIcon name="search" className="shrink-0 text-slate-400" />
           {category !== "all" ? <input type="hidden" name="category" value={category} /> : null}
           <input key={query} aria-label="Search products" type="search" maxLength={200} name="q" defaultValue={query} placeholder="Search products" className="min-h-12 min-w-0 flex-1 bg-transparent text-base outline-none" />
-          <button type="button" onClick={() => imageDialog.current?.showModal()} aria-label="Search by Image" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-blue-700 hover:bg-blue-50"><ShopIcon name="camera" /></button>
           <button type="submit" aria-label="Submit product search" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white"><ShopIcon name="arrow" /></button>
         </form>
-        <div className="mt-2 grid grid-cols-2 gap-3 text-sm font-medium">
+        <div className="mt-2 text-sm font-medium">
           <Link href={`/${locale}/search`} className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-50 text-blue-700"><ShopIcon name="search" width="18" /> Search by Text</Link>
-          <button type="button" onClick={() => imageDialog.current?.showModal()} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 text-slate-700"><ShopIcon name="camera" width="18" /> Search by Image</button>
         </div>
       </section>
 
@@ -161,12 +158,6 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
       <div className="rounded-xl bg-blue-50 p-5 text-sm leading-6 text-slate-600"><p className="font-semibold text-slate-950">Made for B2B orders</p><p>Submit an inquiry first. We will confirm product prices and international shipping before payment.</p></div>
     </div>
 
-    <dialog ref={imageDialog} className="shop-dialog max-w-md" aria-labelledby="image-search-title">
-      <DialogClose onClose={() => imageDialog.current?.close()} />
-      <ShopIcon name="camera" className="mb-4 text-blue-700" width="32" height="32" />
-      <h2 id="image-search-title" className="text-2xl font-semibold">Search by Image</h2><p className="mt-3 leading-7 text-slate-600">Photo search is coming soon. You can search by product name or SKU today.</p>
-      <Link href={`/${locale}/search`} onClick={() => imageDialog.current?.close()} className="mt-5 inline-flex min-h-12 items-center rounded-lg bg-blue-700 px-5 font-medium text-white">Search by Text</Link>
-    </dialog>
     <dialog ref={noticeDialog} className="shop-dialog max-w-md" aria-labelledby="favorites-title"><DialogClose onClose={() => noticeDialog.current?.close()} /><h2 id="favorites-title" className="text-2xl font-semibold">Favorites</h2><p className="mt-3 leading-7 text-slate-600">{notice}</p></dialog>
     <dialog ref={productDialog} className="shop-dialog max-w-5xl" aria-label="Product preview" onClose={() => setSelected(null)}>
       <DialogClose onClose={() => productDialog.current?.close()} />
