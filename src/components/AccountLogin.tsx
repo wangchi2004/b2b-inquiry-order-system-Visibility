@@ -12,6 +12,7 @@ export function AccountLogin({ signedIn, locale }: { signedIn: boolean; locale: 
     try {
       const res = await fetch('/api/account/session', { method: signedIn ? 'DELETE' : 'POST', headers: { 'Content-Type': 'application/json' }, body: form ? JSON.stringify({ email: form.get('email'), password: form.get('password') }) : undefined });
       if (!res.ok) { setError((await res.json()).error ?? 'Please try again'); return; }
+      window.dispatchEvent(new Event('account-session-changed'));
       if (!signedIn) router.push(`/${locale}/catalog`);
       router.refresh();
     } catch { setError('Please try again / 请重试'); } finally { setBusy(false); }

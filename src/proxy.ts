@@ -93,5 +93,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/catalog-files/:path*", "/downloads/sample-catalog.pdf", "/api/mobile/:path*", "/((?!api|_next|.*\\..*).*)"]
+  matcher: ["/api/favorites", "/api/catalog-files/:path*", "/downloads/sample-catalog.pdf", "/api/mobile/:path*", "/((?!api|_next|.*\\..*).*)"]
 };

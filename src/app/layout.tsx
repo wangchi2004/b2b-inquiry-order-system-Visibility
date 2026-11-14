@@ -1,3 +1,4 @@
+import { FavoritesProvider } from "@/components/FavoritesProvider";
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 
@@ -13,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><FavoritesProvider>{children}</FavoritesProvider></body>
     </html>
   );
 }

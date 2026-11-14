@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteButton } from "@/components/FavoriteButton";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -53,9 +54,7 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
   }
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<ProductWithVariants | null>(null);
-  const [notice, setNotice] = useState("");
   const productDialog = useRef<HTMLDialogElement>(null);
-  const noticeDialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     function restore() { setRecentIds(readRecentProducts()); }
     restore();
@@ -73,10 +72,6 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
     setSelected(product);
     recordRecentProduct(product.id);
   }
-  function favorite() {
-    setNotice("Favorites are coming soon. For now, add selected specifications to your inquiry cart.");
-    noticeDialog.current?.showModal();
-  }
   const popular = popularIds.flatMap(id => products.find(p => p.id === id) ?? []).slice(0, 6);
   const recent = recentIds.flatMap(id => products.find(p => p.id === id) ?? []);
   const loadingSearch = mode === "search" && searchResult.key !== searchKey;
@@ -92,7 +87,7 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
 
   function grid(items: ProductWithVariants[]) {
     return <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-      {items.map(product => <ShopProductCard key={product.id} product={product} href={`/${locale}/products/${encodeURIComponent(product.slug)}`} onView={() => viewProduct(product)} onFavorite={favorite} />)}
+      {items.map(product => <ShopProductCard key={product.id} product={product} href={`/${locale}/products/${encodeURIComponent(product.slug)}`} onView={() => viewProduct(product)} locale={locale} />)}
     </div>;
   }
   return <div className="shop-surface bg-white text-slate-950">
@@ -158,7 +153,6 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
       <div className="rounded-xl bg-blue-50 p-5 text-sm leading-6 text-slate-600"><p className="font-semibold text-slate-950">Made for B2B orders</p><p>Submit an inquiry first. We will confirm product prices and international shipping before payment.</p></div>
     </div>
 
-    <dialog ref={noticeDialog} className="shop-dialog max-w-md" aria-labelledby="favorites-title"><DialogClose onClose={() => noticeDialog.current?.close()} /><h2 id="favorites-title" className="text-2xl font-semibold">Favorites</h2><p className="mt-3 leading-7 text-slate-600">{notice}</p></dialog>
     <dialog ref={productDialog} className="shop-dialog max-w-5xl" aria-label="Product preview" onClose={() => setSelected(null)}>
       <DialogClose onClose={() => productDialog.current?.close()} />
       <p className="mb-4 text-sm font-medium text-blue-700">Product preview · Select specifications for your inquiry</p>
@@ -173,7 +167,7 @@ function DialogClose({ onClose }: { onClose: () => void }) {
 function SectionHeading({ id, title, href }: { id: string; title: string; href?: string }) {
   return <div className="mb-4 flex min-h-11 items-center justify-between gap-2"><h2 id={id} className="text-xl font-semibold tracking-tight">{title}</h2>{href ? <Link href={href} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-blue-700">View all <ShopIcon name="arrow" width="16" /></Link> : null}</div>;
 }
-function ShopProductCard({ product, href, onView, onFavorite }: { product: ProductWithVariants; href: string; onView: () => void; onFavorite: () => void }) {
+function ShopProductCard({ product, href, onView, locale }: { product: ProductWithVariants; href: string; onView: () => void; locale: string }) {
   const name = product.translated_name || product.name;
   const price = getPriceSummary(product, "Ask for price");
   const stocks = product.product_variants.map(v => v.stock_status);
@@ -183,7 +177,7 @@ function ShopProductCard({ product, href, onView, onFavorite }: { product: Produ
       <Link href={href} prefetch={false} aria-label={`View ${name}`} className="relative block aspect-square w-full">
         {product.image_url ? <Image src={product.image_url} alt={name} fill unoptimized sizes="(max-width: 640px) 45vw, 260px" className="object-contain p-3 mix-blend-multiply transition-transform hover:scale-105" /> : <span className="flex h-full items-center justify-center text-sm text-slate-500">No image</span>}
       </Link>
-      <button type="button" onClick={onFavorite} aria-label={`Favorite ${name}`} className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm hover:text-blue-700"><ShopIcon name="heart" width="19" /></button>
+      <FavoriteButton productId={product.id} locale={locale} name={name} compact />
     </div>
     <Link href={href} prefetch={false} className="mt-2 flex min-h-11 w-full items-center text-left text-sm font-semibold leading-5 hover:text-blue-700"><span className="line-clamp-2">{name}</span></Link>
     <p className="truncate text-sm text-slate-500" title={product.product_variants.map(v => v.sku).join(", ")}>{product.product_variants[0]?.sku || "SKU pending"}{product.product_variants.length > 1 ? " · + options" : ""}</p>

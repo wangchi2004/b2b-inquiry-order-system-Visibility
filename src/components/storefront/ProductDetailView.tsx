@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteButton } from "@/components/FavoriteButton";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -18,7 +19,6 @@ export function ProductDetailView({ product, locale }: { product: ProductDetail;
   const [message, setMessage] = useState("");
   const [added, setAdded] = useState(false);
   const zoom = useRef<HTMLDialogElement>(null);
-  const favorites = useRef<HTMLDialogElement>(null);
   const touchX = useRef<number | null>(null);
   const variant = variants.find(v => v.id === variantId);
   const color = variant ? variantColor(product, variant) : product.color || "Not specified";
@@ -106,10 +106,9 @@ export function ProductDetailView({ product, locale }: { product: ProductDetail;
         {unavailable ? <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm leading-6 text-amber-900">{unavailable}</p> : null}
         <div className="product-purchase-bar"><div className="mx-auto flex max-w-6xl items-center gap-4 md:block"><div className="min-w-0 flex-1 md:hidden"><p className="text-sm text-slate-500">{variant?.size ? `Size ${variant.size}` : "Selected specification"}</p><p className="font-semibold">{price}</p></div><button type="button" onClick={addToCart} disabled={Boolean(unavailable) || !validQuantity} className="min-h-12 flex-1 rounded-lg bg-blue-700 px-5 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 md:mt-6 md:w-full">{added ? "Add More to Cart" : "Add to Cart"}</button></div></div>
         <p role="status" aria-live="polite" className={`mt-3 text-sm leading-6 ${added ? "text-emerald-700" : "text-amber-800"}`}>{message}{added ? <Link href={`/${locale}/cart`} className="ml-2 inline-flex min-h-11 items-center font-semibold text-blue-700 underline">View cart →</Link> : null}</p>
-        <div className="mt-3 grid gap-3"><button type="button" onClick={() => favorites.current?.showModal()} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 font-medium"><ShopIcon name="heart" /> Add to Favorites</button><a href={`mailto:wangchi.2004@gmail.com?${inquiry}`} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 text-center font-medium">Ask About This Product <ShopIcon name="arrow" width="18" /></a></div>
+        <div className="mt-3 grid gap-3"><FavoriteButton productId={product.id} locale={locale} name={name} /><a href={`mailto:wangchi.2004@gmail.com?${inquiry}`} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 text-center font-medium">Ask About This Product <ShopIcon name="arrow" width="18" /></a></div>
       </section>
     </div>
     <dialog ref={zoom} className="shop-dialog max-w-5xl" aria-label="Enlarged product image" onKeyDown={event => { if (event.key === "ArrowRight") changeImage(1); if (event.key === "ArrowLeft") changeImage(-1); }}><button type="button" aria-label="Close image" onClick={() => zoom.current?.close()} className="mb-3 ml-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ShopIcon name="close" /></button>{image ? <div className="relative h-[65dvh]"><Image src={image} alt={`${name} — enlarged image ${imageIndex + 1}`} fill unoptimized sizes="90vw" className="object-contain" /></div> : null}{images.length > 1 ? <div className="mt-3 flex items-center justify-between"><button type="button" onClick={() => changeImage(-1)} className="min-h-11 px-4">← Previous</button><span>{imageIndex + 1} / {images.length}</span><button type="button" onClick={() => changeImage(1)} className="min-h-11 px-4">Next →</button></div> : null}</dialog>
-    <dialog ref={favorites} className="shop-dialog max-w-md" aria-labelledby="detail-favorites-title"><button type="button" aria-label="Close favorites" onClick={() => favorites.current?.close()} className="mb-3 ml-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ShopIcon name="close" /></button><h2 id="detail-favorites-title" className="text-xl font-semibold">Favorites are coming soon</h2><p className="mt-3 leading-7 text-slate-600">You can add this product to your inquiry cart today. Saved favorites will be available with customer accounts.</p></dialog>
   </div>;
 }

@@ -17,7 +17,7 @@ export function AccountRegister({ locale }: { locale: string }) {
       const response = await fetch('/api/account/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.get('email'), password: form.get('password'), locale }) });
       const result = await response.json();
       if (!response.ok) { setMessage(result.error ?? 'Please try again / 请重试'); return; }
-      if (result.signedIn) { router.push(`/${locale}/account`); router.refresh(); return; }
+      if (result.signedIn) { window.dispatchEvent(new Event('account-session-changed')); router.push(`/${locale}/account`); router.refresh(); return; }
       setSent(true);
       setMessage('Check your email to confirm registration, then sign in. If already registered, sign in or reset your password. / 请查看邮件完成注册验证，然后登录；已有账号请登录或重置密码。');
     } catch { setMessage('Please try again / 请重试'); }
