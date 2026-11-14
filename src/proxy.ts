@@ -1,3 +1,5 @@
+import { ACCOUNT_COOKIE, ACCOUNT_REFRESH_COOKIE, renewAccountCookies } from "@/lib/accountCookies";
+import { createSupabaseServerClient } from "@/lib/supabase";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, locales } from "@/i18n/routing";
@@ -18,7 +20,7 @@ function isLocalhost(hostname: string) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
 
-export default function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { nextUrl } = request;
   const pathname = nextUrl.pathname;
   if (pathname.startsWith("/api/mobile/")) {
@@ -59,13 +61,37 @@ export default function proxy(request: NextRequest) {
     });
   }
 
-  if (isLocalePath(pathname)) {
-    return intlMiddleware(request);
+  // Renew before rendering so server pages and downloads see the new access token.
+  let updates: Awaited<ReturnType<typeof renewAccountCookies>> = [];
+  if (!pathname.startsWith("/admin") && !pathname.startsWith("/api/account/")) {
+    const refresh = request.cookies.get(ACCOUNT_REFRESH_COOKIE)?.value;
+    if (refresh) {
+      try {
+        updates = await renewAccountCookies(
+          request.cookies.get(ACCOUNT_COOKIE)?.value, refresh,
+          createSupabaseServerClient().auth,
+        );
+      } catch { /* Retain credentials on transient network failures. */ }
+    }
   }
-
-  return NextResponse.next();
+  for (const cookie of updates) {
+    if (cookie.maxAge === 0) request.cookies.delete(cookie.name);
+    else request.cookies.set(cookie.name, cookie.value);
+  }
+  const response = isLocalePath(pathname) ? intlMiddleware(request) : NextResponse.next();
+  if (updates.length) {
+    const overrides = new Set((response.headers.get("x-middleware-override-headers") ?? "").split(",").filter(Boolean));
+    overrides.add("cookie");
+    response.headers.set("x-middleware-override-headers", [...overrides].join(","));
+    response.headers.set("x-middleware-request-cookie", request.headers.get("cookie") ?? "");
+    for (const cookie of updates) response.cookies.set(cookie);
+  }
+  if (request.cookies.has(ACCOUNT_COOKIE) || request.cookies.has(ACCOUNT_REFRESH_COOKIE) || updates.length) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
+  return response;
 }
 
 export const config = {
-  matcher: ["/api/mobile/:path*", "/((?!api|_next|.*\\..*).*)"]
+  matcher: ["/api/catalog-files/:path*", "/downloads/sample-catalog.pdf", "/api/mobile/:path*", "/((?!api|_next|.*\\..*).*)"]
 };

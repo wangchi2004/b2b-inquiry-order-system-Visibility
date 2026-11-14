@@ -2,8 +2,14 @@
 
 The account page now accepts existing confirmed Supabase email/password accounts.
 Inquiry contact details and browser local storage do not grant catalog access.
-Sessions are stored in an HttpOnly, same-site cookie and expire with the access token;
-after expiry the customer must sign in again.
+Access and refresh credentials are stored in HttpOnly, same-site cookies.
+The refresh cookie persists for 90 days and is renewed when an expired access
+credential is refreshed on the next visit. The proxy forwards rotated credentials
+to both the current server render/download and the browser.
+Logout clears both cookies and attempts to revoke the current provider session.
+Clearing browser data, provider revocation, or 90 days without renewal requires
+signing in again. Existing logins created before this change need one new login
+to receive a refresh cookie. Passwords are never stored in browser storage.
 
 ## Release together
 
@@ -19,7 +25,7 @@ after expiry the customer must sign in again.
    longer returns the file (including any previously cached copies).
 
 The public `/samples` product image gallery remains available. Customer registration,
-password recovery, and the mobile app's separate session are outside this change.
+and the mobile app's separate session are outside this change.
 
 ## Password recovery
 

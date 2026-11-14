@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase';
 
-export const ACCOUNT_COOKIE = 'catalog-account-token';
+import { ACCOUNT_COOKIE } from '@/lib/accountCookies';
 export async function accountUser() {
   const token = (await cookies()).get(ACCOUNT_COOKIE)?.value;
   if (!token) return null;
