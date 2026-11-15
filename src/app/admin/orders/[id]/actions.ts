@@ -576,3 +576,21 @@ export async function manageMobileOrder(formData: FormData) {
   revalidatePath(`/admin/orders/${id}`);
   redirect(adminOrderPath(id, password, error ? error.message : "App order updated."));
 }
+
+
+export async function updateWebOrderFulfillment(formData: FormData) {
+  const password = readString(formData.get('password'));
+  if (!checkAdminAccess(password).ok) redirect('/admin/orders');
+  const id = readString(formData.get('order_id'));
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/admin/orders');
+  const status = readString(formData.get('next_status'));
+  const carrier = readString(formData.get('carrier'));
+  const tracking = readString(formData.get('tracking'));
+  const db = createSupabaseAdminClient();
+  const {data: current,error: readError} = await db.from('orders').select('status,quote_updated_at,grand_total').eq('id',id).is('mobile_user_id',null).maybeSingle();
+  const allowed: Record<string,string[]> = {new:['confirmed','cancelled'],submitted:['confirmed','cancelled'],quoted:['confirmed','cancelled'],confirmed:['processing','shipped','cancelled'],processing:['shipped','cancelled'],shipped:['completed'],completed:[],cancelled:[]};
+  if (readError || !current || (status!==current.status && !allowed[current.status]?.includes(status)) || carrier.length>200 || tracking.length>200 || (['shipped','completed'].includes(status)&&(!carrier||!tracking)) || (status==='confirmed'&&(!current.quote_updated_at||current.grand_total===null))) redirect(adminOrderPath(id,password,'无法更新：请检查报价、状态及物流信息。'));
+  const {data,error} = await db.from('orders').update({status,shipping_carrier:carrier||null,tracking_number:tracking||null}).eq('id',id).is('mobile_user_id',null).eq('status',current.status).select('id').maybeSingle();
+  revalidatePath(`/admin/orders/${id}`); revalidatePath('/[locale]/orders','page'); revalidatePath('/[locale]/orders/[id]','page');
+  redirect(adminOrderPath(id,password,error||!data?'更新失败，请刷新重试。':'订单状态及物流已更新。'));
+}

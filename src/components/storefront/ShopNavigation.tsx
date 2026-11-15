@@ -33,7 +33,7 @@ export function ShopNavigation({ locale }: { locale: string }) {
     <div className="mx-auto grid max-w-xl grid-cols-5">
       {tabs.map(tab => {
         const href = `/${locale}${tab.path}`;
-        const active = pathname === href || (tab.path === "" && pathname === "/") || (tab.path === "/search" && pathname.startsWith(`/${locale}/products/`));
+        const active = pathname === href || (tab.path === "" && pathname === "/") || (tab.path === "/orders" && pathname.startsWith(`/${locale}/orders/`)) || (tab.path === "/search" && pathname.startsWith(`/${locale}/products/`));
         return <Link key={shopText(locale, tab.label)} href={href} aria-current={active ? "page" : undefined} className={`relative flex min-h-16 flex-col items-center justify-center gap-1 text-sm font-medium ${active ? "text-blue-700" : "text-slate-500 hover:text-slate-950"}`}>
           <span className="relative"><ShopIcon name={tab.icon} />{tab.icon === "cart" && count > 0 ? <span aria-label={`${count} items`} className="absolute -right-3 -top-2 min-w-5 rounded-full bg-blue-700 px-1 text-center text-xs leading-5 text-white">{count > 99 ? "99+" : count}</span> : null}</span>
           {shopText(locale, tab.label)}

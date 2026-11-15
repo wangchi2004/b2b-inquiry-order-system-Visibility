@@ -4,7 +4,7 @@ import { AdminOrderProductDetails } from "@/components/AdminOrderProductDetails"
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
 import { type AdminOrderItem, getAdminOrderById } from "@/lib/adminOrders";
-import { manageMobileOrder, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
+import { manageMobileOrder, updateWebOrderFulfillment, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
 
 type AdminOrderDetailPageProps = {
   params: Promise<{
@@ -56,8 +56,8 @@ export default async function AdminOrderDetailPage({
         </div>
 
         {mobileOrder?.mobile_user_id && <form action={manageMobileOrder} className="mb-6 rounded border border-emerald-200 bg-emerald-50 p-5">
-          <h2 className="mb-3 text-lg font-semibold">客户 App 订单 · 统一价格</h2>
-          <p className="mb-4 text-sm">商品金额保留下单时的价格。填写运费并发布报价后，客户可在 App 内确认。报价确认后不可修改。</p>
+          <h2 className="mb-3 text-lg font-semibold">客户订单 · 报价及物流</h2>
+          <p className="mb-4 text-sm">商品金额保留下单时的价格。填写运费并发布报价后，客户可在网站或 App 内确认。报价确认后不可修改。</p>
           <input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/>
           <div className="flex flex-wrap gap-3">
             <input aria-label="Shipping fee USD" name="shipping_fee" type="number" min="0" step="0.01" placeholder="运费 USD" defaultValue={order.shipping_fee ?? ""} className="rounded border p-2"/>
@@ -65,6 +65,11 @@ export default async function AdminOrderDetailPage({
             <input aria-label="Tracking number" name="tracking" placeholder="物流单号" defaultValue={mobileOrder.tracking_number ?? ""} className="rounded border p-2"/>
             {[["quote","发布报价"],["processing","开始备货"],["shipped","确认发货"],["completed","完成订单"],["cancelled","取消订单"]].map(([value,label]) => <button key={value} name="mobile_action" value={value} className="rounded bg-emerald-900 px-4 py-2 text-white">{label}</button>)}
           </div>
+        </form>}
+        {!mobileOrder?.mobile_user_id && <form action={updateWebOrderFulfillment} className="mb-6 space-y-3 rounded border border-blue-200 bg-blue-50 p-5">
+          <h2 className="text-lg font-semibold">更新客户订单状态及物流</h2>
+          <input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/>
+          <div className="flex flex-wrap gap-3"><select name="next_status" defaultValue={order.status} className="rounded border p-2">{[...new Set([order.status,'confirmed','processing','shipped','completed','cancelled'])].map(status=><option key={status} value={status}>{status}</option>)}</select><input aria-label="Carrier" name="carrier" placeholder="物流公司" defaultValue={mobileOrder?.shipping_carrier ?? ''} className="rounded border p-2"/><input aria-label="Tracking" name="tracking" placeholder="物流单号" defaultValue={mobileOrder?.tracking_number ?? ''} className="rounded border p-2"/><button className="rounded bg-blue-700 px-4 py-2 text-white">保存状态和物流</button></div>
         </form>}
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <section className="rounded border border-slate-200 bg-white p-5">

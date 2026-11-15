@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       .from("orders")
       .insert({
         customer_id: customerRecord.id,
+        mobile_user_id: user.id,
         customer_email: customer.email,
         country: customer.country,
         whatsapp: customer.whatsapp ?? null,

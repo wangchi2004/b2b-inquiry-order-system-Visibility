@@ -1,0 +1,15 @@
+const copy: Record<string, [string,string,string]> = {
+  'My Orders':['我的订单','注文履歴','내 주문'], 'Order details':['订单详情','注文詳細','주문 상세'],
+  'Order number':['订单编号','注文番号','주문 번호'], 'Created':['下单时间','注文日時','주문일'],
+  'Status':['处理状态','状況','처리 상태'], 'new':['待处理','受付済み','접수됨'], 'submitted':['已提交','送信済み','제출됨'],
+  'quoted':['待确认报价','見積り確認待ち','견적 확인 대기'], 'confirmed':['已确认','確認済み','확인됨'], 'processing':['备货中','準備中','상품 준비 중'], 'shipped':['已发货','発送済み','배송 중'], 'completed':['已完成','完了','완료'], 'cancelled':['已取消','キャンセル','취소됨'],
+  'Quote':['报价','見積り','견적'], 'Pending quote':['等待报价','見積り待ち','견적 대기'], 'Product subtotal':['商品金额','商品小計','상품 금액'], 'Shipping fee':['运费','送料','배송비'], 'Total':['合计','合計','합계'], 'Quote updated':['报价更新时间','見積り更新日時','견적 수정일'], 'PayPal fee':['PayPal手续费','PayPal手数料','PayPal 수수료'], 'PayPal total':['PayPal应付金额','PayPal支払額','PayPal 결제 금액'],
+  'Logistics':['物流信息','配送情報','배송 정보'], 'Carrier':['物流公司','配送業者','배송사'], 'Tracking number':['物流单号','追跡番号','운송장 번호'], 'Not shipped yet':['尚未发货','未発送','아직 발송되지 않았습니다'], 'Tracking not available yet':['物流单号尚未录入','追跡番号は未登録です','운송장 번호가 아직 등록되지 않았습니다'],
+  'Items':['商品明细','注文商品','주문 상품'], 'Product':['商品','商品','상품'], 'Quantity':['数量','数量','수량'], 'Unit price':['单价','単価','단가'], 'Amount':['金额','金額','금액'], 'Size':['尺寸','サイズ','사이즈'], 'Color':['颜色','色','색상'], 'Shipping address':['收货信息','配送先','배송지'], 'Recipient':['收货人','受取人','수령인'], 'Phone':['联系电话','電話番号','전화번호'], 'Country':['国家','国','국가'], 'Address':['地址','住所','주소'],
+  'No orders yet':['暂无订单','注文はまだありません','아직 주문이 없습니다'], 'Browse products':['浏览商品','商品を見る','상품 둘러보기'], 'View details':['查看详情','詳細を見る','상세 보기'], 'Back to orders':['返回订单列表','注文履歴に戻る','주문 목록으로'], 'Previous':['上一页','前へ','이전'], 'Next':['下一页','次へ','다음'], 'Refresh':['刷新','更新','새로고침'],
+  'Orders unavailable. Please try again.':['订单加载失败，请重试。','注文を読み込めません。再度お試しください。','주문을 불러오지 못했습니다. 다시 시도해 주세요.'], 'Contact us':['联系我们','お問い合わせ','문의하기'], 'Confirm quote':['确认报价','見積りを承認','견적 확인'], 'Quote changed. Refresh and review the latest quote.':['报价已更新，请刷新并查看最新报价。','見積りが更新されました。最新内容をご確認ください。','견적이 변경되었습니다. 새로고침하여 최신 견적을 확인하세요.'], 'Quote confirmed':['报价已确认','見積りを承認しました','견적이 확인되었습니다'], 'Confirmation is not a payment.':['确认报价不代表已付款。','見積りの承認は支払いではありません。','견적 확인은 결제가 아닙니다.'], 'Order status':['订单进度','注文状況','주문 진행 상황'],
+};
+const english: Record<string,string>={new:'Received',submitted:'Submitted',quoted:'Awaiting quote confirmation',confirmed:'Confirmed',processing:'Preparing order',shipped:'Shipped',completed:'Completed',cancelled:'Cancelled'};
+export function orderText(locale: string, key: string) { const i=({zh:0,ja:1,ko:2} as Record<string,number>)[locale]; return i===undefined ? english[key] ?? key : copy[key]?.[i] ?? key; }
+export function orderMoney(value: number | null, locale: string) { return value === null ? '—' : new Intl.NumberFormat(locale, {style:'currency',currency:'USD'}).format(value); }
+export function orderDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale, {dateStyle:'medium',timeStyle:'short',timeZone:'UTC'}).format(new Date(value)) + ' UTC'; }
