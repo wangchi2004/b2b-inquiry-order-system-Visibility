@@ -1,10 +1,12 @@
 'use client';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { languagePath } from '@/lib/languagePath';
 import { setCartLocale } from '@/lib/cart';
 
 export function LanguageSwitcher({ locale }: { locale: string }) {
   const router = useRouter();
+  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
   const label = ({ en: 'Language', zh: '网站语言', ja: '言語', ko: '언어' } as Record<string, string>)[locale] ?? 'Language';
   return <label className="flex items-center gap-2 text-sm font-medium text-slate-600"><span className="sr-only">{label}</span><select aria-label={label} value={locale} onChange={event => {
     const language = event.target.value;

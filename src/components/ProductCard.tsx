@@ -1,5 +1,6 @@
 "use client";
 
+import { shopText } from "@/i18n/shopText";
 import { useMemo, useState } from "react";
 import { addCartItems, setCartLocale, setContinueShoppingPath } from "@/lib/cart";
 import { recordSampleAnalytics } from "@/lib/sampleAnalytics";
@@ -8,6 +9,7 @@ import type { ProductWithVariants } from "@/lib/types";
 type ProductCardProps = {
   product: ProductWithVariants;
   mode?: "order" | "sample";
+  locale?: string;
   labels?: ProductCardLabels;
 };
 
@@ -33,7 +35,7 @@ export type ProductCardLabels = {
   enterQuantity?: string;
 };
 
-export function ProductCard({ product, mode = "order", labels }: ProductCardProps) {
+export function ProductCard({ product, mode = "order", labels, locale = "en" }: ProductCardProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [addedMessage, setAddedMessage] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -51,7 +53,8 @@ export function ProductCard({ product, mode = "order", labels }: ProductCardProp
   const isSampleMode = mode === "sample";
   const priceSummary = getPriceSummary(
     product,
-    labels?.pricePending ?? "Price pending, contact sales"
+    labels?.pricePending ?? "Price pending, contact sales",
+    locale
   );
 
   const selectedItems = useMemo(() => {
@@ -414,7 +417,7 @@ function getSizeRange(product: ProductWithVariants) {
   return sizes.join(", ");
 }
 
-export function getPriceSummary(product: ProductWithVariants, pendingLabel: string) {
+export function getPriceSummary(product: ProductWithVariants, pendingLabel: string, locale = "en") {
   const prices = product.product_variants
     .map((variant) => variant.price)
     .filter(isPriced);
@@ -432,7 +435,7 @@ export function getPriceSummary(product: ProductWithVariants, pendingLabel: stri
   const uniquePrices = Array.from(new Set(prices));
   const priceLabel = uniquePrices.length === 1
     ? formatMoney(uniquePrices[0], product.currency)
-    : `From ${formatMoney(Math.min(...prices), product.currency)}`;
+    : shopText(locale, "From {price}", { price: formatMoney(Math.min(...prices), product.currency) });
 
   return {
     hasPrice: true,

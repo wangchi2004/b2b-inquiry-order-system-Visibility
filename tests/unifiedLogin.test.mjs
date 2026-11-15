@@ -8,7 +8,7 @@ import { accountReturnPath } from '../src/lib/accountReturnPath.ts';
 async function entry(user) {
   let source = await readFile(new URL('../src/components/GeneralOrderEntryForm.tsx',import.meta.url),'utf8');
   source=source.replace(/^import .*;\n/gm,'');
-  source=`import {createElement,Fragment} from ${JSON.stringify(import.meta.resolve('react'))};\nconst Link=({children,...props})=>createElement('a',props,children);\nconst accountUser=async()=>(${JSON.stringify(user)});\n${source}`;
+  source=`import {shopText} from ${JSON.stringify(new URL('../src/i18n/shopText.ts',import.meta.url).href)};\nimport {createElement,Fragment} from ${JSON.stringify(import.meta.resolve('react'))};\nconst Link=({children,...props})=>createElement('a',props,children);\nconst accountUser=async()=>(${JSON.stringify(user)});\n${source}`;
   const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React,jsxFactory:'createElement',jsxFragmentFactory:'Fragment'}}).outputText;
   const module=await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
   return renderToStaticMarkup(await module.GeneralOrderEntryForm({redirectTo:'/zh/order/general'}));

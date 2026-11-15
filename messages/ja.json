@@ -19,8 +19,8 @@
     "clear": "クリア"
   },
   "Home": {
-    "eyebrow": "B2B export workflow",
-    "title": "B2B Inquiry Order System",
+    "eyebrow": "B2B輸出注文",
+    "title": "B2Bお問い合わせ注文システム",
     "description": "海外のお客様が商品と数量を選択し、お問い合わせを送信できるB2B向けシステムです。確認メールも送信されます。",
     "contact": "お問い合わせ先",
     "enterTitle": "PC版ログイン",

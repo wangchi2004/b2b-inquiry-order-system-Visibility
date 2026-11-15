@@ -19,8 +19,8 @@
     "clear": "초기화"
   },
   "Home": {
-    "eyebrow": "B2B export workflow",
-    "title": "B2B Inquiry Order System",
+    "eyebrow": "B2B 수출 주문",
+    "title": "B2B 문의 주문 시스템",
     "description": "해외 고객이 제품과 수량을 선택하고 문의를 제출하면 이메일로 확인을 받는 B2B 문의 시스템입니다.",
     "contact": "연락처",
     "enterTitle": "PC 로그인",

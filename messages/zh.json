@@ -19,8 +19,8 @@
     "clear": "清空"
   },
   "Home": {
-    "eyebrow": "B2B 外贸询盘流程",
-    "title": "B2B 询盘订货系统",
+    "eyebrow": "B2B出口订货",
+    "title": "B2B询价订货系统",
     "description": "国外客户可选择产品、填写数量并提交询盘，系统会通过邮件发送订单确认。",
     "contact": "联系方式",
     "enterTitle": "PC端登录入口",
