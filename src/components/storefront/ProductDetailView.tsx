@@ -10,7 +10,7 @@ import { detailCartItem, MAX_DETAIL_QUANTITY, minimumDetailQuantity, variantColo
 import { recordRecentProduct } from "@/lib/recentProducts";
 import { ShopIcon } from "./ShopIcon";
 
-export function ProductDetailView({ product, locale }: { product: ProductDetail; locale: string }) {
+export function ProductDetailView({ product, locale, canViewPrices }: { product: ProductDetail; locale: string; canViewPrices: boolean }) {
   const variants = product.product_variants;
   const [variantId, setVariantId] = useState(() => (variants.find(v => !variantUnavailableReason(v)) ?? variants[0])?.id || "");
   const minimum = minimumDetailQuantity(product);
@@ -32,7 +32,7 @@ export function ProductDetailView({ product, locale }: { product: ProductDetail;
   const unavailable = variantUnavailableReason(variant);
   const stock = variant?.stock_status === "in_stock" ? "In stock" : variant?.stock_status === "out_of_stock" ? "Out of stock" : variant?.stock_status === "preorder" ? "Preorder" : "Check availability";
   const currency = product.currency || "USD";
-  const price = typeof variant?.price === "number" && Number.isFinite(variant.price) && variant.price >= 0
+  const price = !canViewPrices ? "Sign in to view prices / 登录后查看价格" : typeof variant?.price === "number" && Number.isFinite(variant.price) && variant.price >= 0
     ? `${currency} ${variant.price.toFixed(2)}`
     : "Ask for price";
   const inquiry = new URLSearchParams({
@@ -90,7 +90,8 @@ export function ProductDetailView({ product, locale }: { product: ProductDetail;
         <p className="text-sm font-medium text-blue-700">{product.category || "Shoe repair materials"}</p>
         <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{name}</h1>
         <p className="mt-3 break-words text-sm text-slate-500">SKU: <span data-testid="selected-sku">{variant?.sku || "Not available"}</span></p>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="text-3xl font-bold" data-testid="selected-price">{price}<span className="ml-2 text-sm font-normal text-slate-500">{variant?.price != null ? `/ ${variant.unit}` : ""}</span></p><span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${stock === "In stock" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{stock}</span></div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="text-3xl font-bold" data-testid="selected-price">{price}<span className="ml-2 text-sm font-normal text-slate-500">{canViewPrices && variant?.price != null ? `/ ${variant.unit}` : ""}</span></p><span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${stock === "In stock" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{stock}</span></div>
+        {!canViewPrices ? <Link href={`/${locale}/account?next=${encodeURIComponent(`/${locale}/products/${product.slug}`)}`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-blue-700">Sign in / 登录查看价格 →</Link> : null}
         <p className="mt-3 text-sm leading-6 text-slate-500">Final price and international shipping will be confirmed with your quote.</p>
         <div className="mt-6 border-t border-slate-100 pt-5"><h2 className="text-lg font-semibold">Description</h2><p className="mt-2 whitespace-pre-line text-base leading-7 text-slate-600">{product.translated_description || product.description || "Please contact us for more details about this product."}</p></div>
         <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 rounded-xl bg-slate-50 p-4 text-sm">

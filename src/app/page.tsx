@@ -76,10 +76,10 @@ export default async function HomePage() {
         </div>
         <div>
           <h2 className="mb-3 text-xl font-semibold text-slate-950">
-            Enter Product Page / 进入选品询价
+            PC Login / PC端登录入口
           </h2>
           <p className="mb-4 text-sm text-slate-600">
-            Sign in using the account at the top, then choose a language to enter product selection.
+            Choose a language to enter the PC ordering system. Your sign-in status is shared with the account at the top. / 选择语言进入PC端订货系统，登录状态与顶部账号一致。
           </p>
           <GeneralOrderEntryForm
             redirectTo="/en/order/general"
@@ -92,7 +92,7 @@ export default async function HomePage() {
               zh: "/zh/order/general"
             }}
             labels={{
-              language: "Language",
+              language: "Choose language / 选择语言",
               button: "Enter Product Page"
             }}
           />

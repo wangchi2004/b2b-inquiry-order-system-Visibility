@@ -1,11 +1,13 @@
+import { accountUser } from "@/lib/accountSession";
+import { productForViewer } from "@/lib/priceVisibility";
 import { getActiveProductsWithVariants } from "@/lib/products";
 import { createSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase";
 import type { ProductWithVariants } from "@/lib/types";
 
 
 export async function getStorefrontData(locale: string) {
-  const [catalog, popularIds] = await Promise.all([
-    getActiveProductsWithVariants(locale), getPopularProductIds(),
+  const [catalog, popularIds, user] = await Promise.all([
+    getActiveProductsWithVariants(locale), getPopularProductIds(), accountUser(),
   ]);
   // Only serialize public catalog fields; future cost/admin columns must not leak.
   const products: ProductWithVariants[] = catalog.products.map(p => ({
@@ -23,7 +25,7 @@ export async function getStorefrontData(locale: string) {
       created_at: v.created_at, updated_at: v.updated_at,
     })),
   }));
-  return { products, popularIds, categoryTree: catalog.categoryTree, error: Boolean(catalog.error) };
+  return { products: products.map(p => productForViewer(p, Boolean(user))), canViewPrices: Boolean(user), popularIds, categoryTree: catalog.categoryTree, error: Boolean(catalog.error) };
 }
 
 async function getPopularProductIds(): Promise<string[]> {

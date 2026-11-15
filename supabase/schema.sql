@@ -225,7 +225,11 @@ for each row execute function set_updated_at();
 grant usage on schema public to anon, authenticated, service_role;
 
 grant select on products to anon, authenticated, service_role;
-grant select on product_variants to anon, authenticated, service_role;
+grant select on product_variants to authenticated, service_role;
+revoke select on product_variants from anon, public;
+revoke select (price) on product_variants from anon, public;
+grant select (id,product_id,sku,size,color,unit,stock_status,dimension_image_url,created_at,updated_at)
+  on product_variants to anon;
 grant select on product_translations to anon, authenticated, service_role;
 grant select on category_translations to anon, authenticated, service_role;
 grant select, insert, update, delete on customers to service_role;

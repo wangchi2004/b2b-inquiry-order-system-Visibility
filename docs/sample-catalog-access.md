@@ -71,3 +71,17 @@ shows a read-only account email, and the server overrides submitted emails with
 the verified account email. Private-link customer updates are also scoped to
 that email. Contact country, company and shipping information remain checkout
 fields, not login credentials.
+
+
+## Product prices
+
+Public home/search/detail pages remain browsable without an account. The server
+removes variant prices before serializing guest product data, including quick
+previews. Guests see a sign-in link; price sorting is available after login.
+The mobile products endpoint also redacts prices without a verified website
+cookie or mobile bearer session. Search results contain identifiers/rank only.
+
+Migration `20261115002809_restrict_guest_product_prices.sql` is applied: anonymous
+Data API reads retain public variant fields but cannot select the price column.
+Authenticated and server access retain prices. Do not restore table-wide anon
+SELECT privileges when updating the database. Website changes require deployment.

@@ -95,6 +95,8 @@ export default async function LocalizedHomePage({
           </p>
           <GeneralOrderEntryForm
             redirectTo={`/${locale}/order/general`}
+            showLanguageSelect
+            defaultLocale={locale}
             labels={{
               email: common("email"),
               country: common("country"),

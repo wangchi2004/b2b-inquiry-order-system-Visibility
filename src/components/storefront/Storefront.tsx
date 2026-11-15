@@ -1,5 +1,6 @@
 "use client";
 
+import { productForViewer } from "@/lib/priceVisibility";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +19,7 @@ import { readRecentProducts, recordRecentProduct, RECENT_PRODUCTS_EVENT } from "
 type Props = Awaited<ReturnType<typeof getStorefrontData>> & {
   locale: string; mode?: "home" | "search"; query?: string; category?: string;
 };
-export function Storefront({ products, popularIds, categoryTree, error, locale, mode = "home", query: initialQuery = "", category: initialCategory = "all" }: Props) {
+export function Storefront({ products, popularIds, categoryTree, error, locale, canViewPrices, mode = "home", query: initialQuery = "", category: initialCategory = "all" }: Props) {
   const searchParams = useSearchParams();
   const query = mode === "search" ? searchParams.get("q") || "" : initialQuery;
   const category = mode === "search" ? searchParams.get("category") || "all" : initialCategory;
@@ -87,7 +88,7 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
 
   function grid(items: ProductWithVariants[]) {
     return <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-      {items.map(product => <ShopProductCard key={product.id} product={product} href={`/${locale}/products/${encodeURIComponent(product.slug)}`} onView={() => viewProduct(product)} locale={locale} />)}
+      {items.map(product => <ShopProductCard key={product.id} product={product} href={`/${locale}/products/${encodeURIComponent(product.slug)}`} onView={() => viewProduct(product)} locale={locale} canViewPrices={canViewPrices} />)}
     </div>;
   }
   return <div className="shop-surface bg-white text-slate-950">
@@ -139,7 +140,7 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
       {error ? <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Products could not be loaded. Please refresh or contact us for assistance.</p> : null}
       {mode === "search" ? <section aria-label="Search results" aria-busy={loadingSearch}>
         {!loadingSearch && query ? <p role="status" className="mb-4 text-sm text-slate-500">{searchResult.semanticStatus === "ready" ? "Keyword + semantic search" : searchResult.semanticStatus === "indexing" ? "Keyword search · semantic index is being prepared" : searchResult.semanticStatus === "unavailable" ? "Keyword results · semantic search temporarily unavailable" : "Keyword search"}</p> : null}
-        <SearchFilters products={products} params={new URLSearchParams(searchParams.toString())} update={updateSearch} />
+        <SearchFilters canViewPrices={canViewPrices} products={products} params={new URLSearchParams(searchParams.toString())} update={updateSearch} />
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold">{category === "all" ? "All products" : category}</h2><span className="text-sm text-slate-500">{loadingSearch ? "Searching…" : searchResult.failed || error ? "Results unavailable" : `${results.length} products`}{query ? ` for “${query}”` : ""}</span></div>
         {searchParams.size > 0 ? <Link href={`/${locale}/search`} onClick={event => navigateSearch(event, event.currentTarget.href)} className="mb-4 inline-flex min-h-11 items-center text-sm text-blue-700 underline">Clear search & filters</Link> : null}
         {searchResult.failed && !loadingSearch ? <div role="alert" className="rounded-xl bg-amber-50 p-4">Search could not be completed.<button className="ml-2 min-h-11 text-blue-700 underline" onClick={() => { setSearchResult({ key: "", matches: [], failed: false }); setRetry(n => n + 1); }}>Retry search</button></div> : null}
@@ -156,7 +157,7 @@ export function Storefront({ products, popularIds, categoryTree, error, locale, 
     <dialog ref={productDialog} className="shop-dialog max-w-5xl" aria-label="Product preview" onClose={() => setSelected(null)}>
       <DialogClose onClose={() => productDialog.current?.close()} />
       <p className="mb-4 text-sm font-medium text-blue-700">Product preview · Select specifications for your inquiry</p>
-      {selected ? <><ProductCard key={selected.id} product={selected} /><Link href={`/${locale}/products/${encodeURIComponent(selected.slug)}`} className="mt-4 flex min-h-11 items-center font-medium text-blue-700">Full product details →</Link></> : null}
+      {selected ? <><ProductCard key={selected.id} product={productForViewer(selected, canViewPrices)} labels={canViewPrices ? undefined : { pricePending: "Sign in to view prices / 登录后查看价格" }} /><Link href={`/${locale}/products/${encodeURIComponent(selected.slug)}`} className="mt-4 flex min-h-11 items-center font-medium text-blue-700">Full product details →</Link></> : null}
       <Link href={`/${locale}/cart`} className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-lg bg-blue-700 px-5 font-semibold text-white">View inquiry cart <ShopIcon name="arrow" /></Link>
     </dialog>
   </div>;
@@ -167,7 +168,7 @@ function DialogClose({ onClose }: { onClose: () => void }) {
 function SectionHeading({ id, title, href }: { id: string; title: string; href?: string }) {
   return <div className="mb-4 flex min-h-11 items-center justify-between gap-2"><h2 id={id} className="text-xl font-semibold tracking-tight">{title}</h2>{href ? <Link href={href} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-blue-700">View all <ShopIcon name="arrow" width="16" /></Link> : null}</div>;
 }
-function ShopProductCard({ product, href, onView, locale }: { product: ProductWithVariants; href: string; onView: () => void; locale: string }) {
+function ShopProductCard({ product, href, onView, locale, canViewPrices }: { product: ProductWithVariants; href: string; onView: () => void; locale: string; canViewPrices: boolean }) {
   const name = product.translated_name || product.name;
   const price = getPriceSummary(product, "Ask for price");
   const stocks = product.product_variants.map(v => v.stock_status);
@@ -181,7 +182,7 @@ function ShopProductCard({ product, href, onView, locale }: { product: ProductWi
     </div>
     <Link href={href} prefetch={false} className="mt-2 flex min-h-11 w-full items-center text-left text-sm font-semibold leading-5 hover:text-blue-700"><span className="line-clamp-2">{name}</span></Link>
     <p className="truncate text-sm text-slate-500" title={product.product_variants.map(v => v.sku).join(", ")}>{product.product_variants[0]?.sku || "SKU pending"}{product.product_variants.length > 1 ? " · + options" : ""}</p>
-    <p className="mt-1 text-base font-semibold">{price.label}</p>
+    <p className="mt-1 text-base font-semibold">{canViewPrices ? price.label : <Link href={`/${locale}/account?next=${encodeURIComponent(`/${locale}/search`)}`} className="inline-flex min-h-11 items-center text-sm text-blue-700">Sign in to view prices / 登录后查看价格</Link>}</p>
     <p className={`mt-1 text-sm ${stock === "In stock" ? "text-emerald-700" : "text-slate-500"}`}>{stock === "In stock" ? "● " : ""}{stock}</p>
     <button type="button" onClick={onView} className="mt-1 min-h-11 text-sm font-medium text-blue-700" aria-label={`Quick view ${name}`}>Quick view</button>
   </article>;
