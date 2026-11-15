@@ -1,3 +1,5 @@
+import { checkoutAddress } from "@/lib/customerAddresses";
+import { shippingSnapshot } from "@/lib/addressData";
 import { accountUser } from "@/lib/accountSession";
 import { NextResponse } from "next/server";
 import { sendOrderNotificationEmails } from "@/lib/email";
@@ -31,6 +33,8 @@ export async function POST(request: Request) {
   if (payload && typeof payload === "object" && "customer" in payload && payload.customer && typeof payload.customer === "object") {
     payload = { ...payload, customer: { ...payload.customer, email: user.email } };
   }
+  const requestedAddressId = payload && typeof payload === "object" && "shippingAddressId" in payload ? payload.shippingAddressId : undefined;
+  if (requestedAddressId !== undefined && (typeof requestedAddressId !== "string" || !/^[0-9a-f-]{36}$/i.test(requestedAddressId))) return NextResponse.json({message:"Invalid shipping address."},{status:400});
   const validation = validateOrderSubmission(payload);
 
   if (!validation.ok) {
@@ -49,10 +53,12 @@ export async function POST(request: Request) {
 
   try {
     const supabase = createSupabaseAdminClient();
+    let address;
+    try { address = await checkoutAddress(user.id, requestedAddressId as string | undefined); } catch { return NextResponse.json({message:"Shipping address is unavailable. Please refresh checkout and try again."},{status:409}); }
     const pricedItems = await getPricedOrderItems(items);
     const linkedCustomerId = await getLinkedCustomerId(token, user.email);
     const customerRecord = await findOrSaveCustomer(customer, linkedCustomerId);
-    const customerShippingDetails = await getCustomerShippingDetails(customerRecord.id);
+    const customerShippingDetails = address ? shippingSnapshot(address) : await getCustomerShippingDetails(customerRecord.id);
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -96,6 +102,12 @@ export async function POST(request: Request) {
       return orderWriteError("Failed to create order items.", orderItemsError);
     }
 
+    const { error: cartSyncError } = await supabase.rpc('mutate_customer_cart', {
+      p_user: user.id, p_operation: order.id,
+      p_changes: items.map(item => ({ type: 'consume', variantId: item.variantId, quantity: item.quantity }))
+    });
+    const cartSyncWarning = cartSyncError ? 'Order saved. Please refresh your cart before ordering again.' : undefined;
+
     const imageSaveWarning = await saveInquiryImageUrls(
       order.id,
       customer.inquiryImageUrls
@@ -116,6 +128,7 @@ export async function POST(request: Request) {
         orderId: order.id,
         warning: combineWarnings(
           emailResult.warning,
+          cartSyncWarning,
           imageSaveWarning,
           localeSaveWarning
         )

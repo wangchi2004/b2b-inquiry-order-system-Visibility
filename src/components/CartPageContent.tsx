@@ -1,10 +1,17 @@
 "use client";
 
+import { shopText } from "@/i18n/shopText";
+import { CartQuantityInput } from "@/components/CartQuantityInput";
+import type { SavedAddress } from "@/lib/addressData";
+import { addressText } from "@/i18n/addresses";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import {
-  clearCart,
+  refreshAccountCart,
+  isCartSyncPending,
+  cartOwner,
+  CART_UPDATED_EVENT,
   getCartLocale,
   getCartItemKey,
   getCartItemCount,
@@ -15,9 +22,9 @@ import {
   removeCartItem,
   setCartLocale,
   updateCartItemQuantity,
+  adjustCartItemQuantity,
   writeCart
 } from "@/lib/cart";
-import { createSupabaseBrowserClient, hasSupabasePublicConfig } from "@/lib/supabase";
 import { validateOrderSubmission } from "@/lib/orderValidation";
 import type { CartLineItem } from "@/lib/types";
 
@@ -97,13 +104,20 @@ const initialCustomerForm: CustomerFormState = {
 export function CartPageContent({
   labels,
   locale,
-  accountEmail
+  accountEmail,
+  shippingAddress = null
 }: {
   labels?: CartPageLabels;
   locale?: string;
   accountEmail: string;
+  shippingAddress?: SavedAddress | null;
 }) {
   const router = useRouter();
+  const addressSignature = JSON.stringify(shippingAddress);
+  const syncedAddress = useMemo(() => JSON.parse(addressSignature) as SavedAddress | null, [addressSignature]);
+  const addressLabel = (text: string) => addressText(locale ?? "en", text);
+  const [cartLoading,setCartLoading]=useState(true);
+  const [cartPending,setCartPending]=useState(false);
   const [items, setItems] = useState<CartLineItem[]>([]);
   const defaultContinueShoppingPath = locale ? `/${locale}/order/general` : "/order/sample-buyer-token";
   const [continueShoppingPath, setContinueShoppingPath] = useState(defaultContinueShoppingPath);
@@ -130,12 +144,7 @@ export function CartPageContent({
 
       const savedItems = readCart();
       setItems(savedItems);
-      hydrateCartImages(savedItems).then((itemsWithImages) => {
-        if (itemsWithImages) {
-          writeCart(itemsWithImages);
-          setItems(itemsWithImages);
-        }
-      });
+      setCartLoading(cartOwner()===undefined);
       const savedContinueShoppingPath = getContinueShoppingPath();
       const localizedContinueShoppingPath =
         locale && savedContinueShoppingPath.startsWith("/order/")
@@ -176,10 +185,17 @@ export function CartPageContent({
           }));
         }
       }
+      if (syncedAddress) setCustomerForm(form => ({ ...form, email: accountEmail, name: syncedAddress.recipient, country: syncedAddress.country, company: syncedAddress.company }));
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [accountEmail, defaultContinueShoppingPath, locale, router]);
+  }, [accountEmail, defaultContinueShoppingPath, locale, router, syncedAddress]);
+
+  useEffect(() => {
+    const update = () => {setItems(readCart());setCartLoading(cartOwner()===undefined);setCartPending(isCartSyncPending());};
+    window.addEventListener(CART_UPDATED_EVENT,update);
+    return () => window.removeEventListener(CART_UPDATED_EVENT,update);
+  }, []);
 
   const totalQuantity = useMemo(() => getCartItemCount(items), [items]);
   const productGroups = useMemo(() => groupCartItemsByProduct(items), [items]);
@@ -189,21 +205,21 @@ export function CartPageContent({
     setItems(readCart());
   }
 
-  function handleRemove(itemKey: string) {
-    removeCartItem(itemKey);
+  async function handleRemove(itemKey: string) {
+    try { await removeCartItem(itemKey); } catch (e) { setSubmitError(e instanceof Error ? shopText(locale??"en",e.message) : shopText(locale??"en","Cart sync failed / 购物车同步失败")); return; }
     refreshCart();
     setSubmitError("");
   }
 
-  function handleQuantityChange(itemKey: string, quantity: number) {
-    updateCartItemQuantity(itemKey, quantity);
+  async function handleQuantityChange(itemKey: string, quantity: number, mode: "set" | "adjust" = "set", expected?: number) {
+    try { await (mode==="adjust" ? adjustCartItemQuantity(itemKey,quantity) : updateCartItemQuantity(itemKey,quantity,expected)); } catch (e) { setSubmitError(e instanceof Error ? shopText(locale??"en",e.message) : shopText(locale??"en","Cart sync failed / 购物车同步失败")); return; }
     refreshCart();
     setSubmitError("");
   }
 
-  function handleRemoveGroup(group: CartProductGroup) {
+  async function handleRemoveGroup(group: CartProductGroup) {
     const keysToRemove = new Set(group.items.map((item) => getCartItemKey(item)));
-    writeCart(readCart().filter((item) => !keysToRemove.has(getCartItemKey(item))));
+    try { await writeCart(readCart().filter((item) => !keysToRemove.has(getCartItemKey(item)))); } catch (e) { setSubmitError(e instanceof Error ? shopText(locale??"en",e.message) : shopText(locale??"en","Cart sync failed / 购物车同步失败")); return; }
     refreshCart();
     setSubmitError("");
   }
@@ -311,9 +327,11 @@ export function CartPageContent({
 
   async function handleSubmitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if(isCartSyncPending()){setSubmitError(shopText(locale??"en","Cart is syncing. Please wait before submitting. / 正在同步购物车，请稍后提交。"));return;}
 
     const payload = {
       customer: { ...customerForm, email: accountEmail },
+      shippingAddressId: shippingAddress?.id,
       items,
       token: orderToken ?? undefined,
       locale: locale ?? "en"
@@ -333,6 +351,7 @@ export function CartPageContent({
       const inquiryImageUrls = await uploadInquiryImages();
       const validatedPayload = {
         ...validation.data,
+        shippingAddressId: shippingAddress?.id,
         customer: {
           ...validation.data.customer,
           inquiryImageUrls
@@ -353,8 +372,9 @@ export function CartPageContent({
         throw new Error(responseBody?.message ?? "Failed to submit order.");
       }
 
-      clearCart();
-      setItems([]);
+      // Consume only the submitted quantities; retain items added on another device.
+      await refreshAccountCart().catch(()=>{});
+      setItems(readCart());
       inquiryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
       setInquiryImages([]);
       router.push("/success");
@@ -369,6 +389,7 @@ export function CartPageContent({
     <main className="min-h-screen">
 
       <section className="mx-auto max-w-6xl px-6 py-10">
+        <section className="mb-6 rounded-xl border border-blue-100 bg-blue-50 p-5"><h2 className="text-lg font-semibold">{addressLabel('Used for this inquiry')}</h2>{shippingAddress ? <><p className="mt-3 font-medium">{shippingAddress.recipient} · {shippingAddress.phone}</p><p className="mt-2 whitespace-pre-line">{[shippingAddress.company, shippingAddress.address, shippingAddress.city, shippingAddress.region, shippingAddress.postal_code, shippingAddress.country].filter(Boolean).join('\n')}</p></> : <p className="mt-3">{addressLabel('No saved addresses')}</p>}<Link href={`/${locale ?? 'en'}/addresses`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-blue-700">{addressLabel(shippingAddress ? 'Manage addresses' : 'Add a shipping address')} →</Link><p className="mt-2 text-sm text-slate-600">{addressLabel('Address is saved with the order; future edits do not change existing orders.')}</p></section>
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
           <Link href={continueShoppingPath} className="hover:text-blue-700">
             {labels?.home ?? "Home"}
@@ -392,7 +413,7 @@ export function CartPageContent({
             "This is not a payment. Submit your inquiry and we will contact you with a quotation."}
         </div>
 
-        {items.length === 0 ? (
+        {cartLoading ? <p role="status" className="mt-6 rounded-xl border p-6">{shopText(locale??"en","Loading cart / 正在加载购物车…")}</p> : items.length === 0 ? (
           <div className="mt-6 rounded border border-slate-200 bg-white p-8 text-center">
             <h2 className="text-lg font-semibold text-slate-950">
               {labels?.emptyTitle ?? "Your cart is empty"}
@@ -593,7 +614,7 @@ export function CartPageContent({
               </div>
               <button
                 type="submit"
-                disabled={isSubmitting || items.length === 0}
+                disabled={isSubmitting || cartPending || items.length === 0}
                 className="h-12 rounded bg-blue-700 px-6 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 {isSubmitting
@@ -633,7 +654,7 @@ function CartProductGroup({
   labels
 }: {
   group: CartProductGroup;
-  onQuantityChange: (itemKey: string, quantity: number) => void;
+  onQuantityChange: (itemKey: string, quantity: number, mode?: "set" | "adjust", expected?: number) => void;
   onRemove: (itemKey: string) => void;
   onRemoveGroup: () => void;
   labels?: CartPageLabels;
@@ -687,26 +708,16 @@ function CartProductGroup({
                   <div className="grid h-9 grid-cols-[32px_42px_32px_28px]">
                     <button
                       type="button"
-                      onClick={() => onQuantityChange(itemKey, item.quantity - 1)}
+                      onClick={() => onQuantityChange(itemKey, -1, "adjust")}
                       className="flex h-full items-center justify-center border-r border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
                       aria-label={`Decrease ${item.productName} ${item.size ?? item.sku}`}
                     >
                       -
                     </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={item.quantity}
-                      onChange={(event) =>
-                        onQuantityChange(itemKey, Number(event.target.value))
-                      }
-                      className="h-full w-full border-0 p-0 text-center text-sm leading-9 outline-none"
-                      aria-label={`${item.productName} ${item.size ?? item.sku} quantity`}
-                    />
+                    <CartQuantityInput quantity={item.quantity} onCommit={(quantity, expected) => onQuantityChange(itemKey, quantity, "set", expected)} label={`${group.productName} ${item.size ?? item.sku} quantity`} className="h-full w-full border-0 p-0 text-center text-sm leading-9 outline-none"/>
                     <button
                       type="button"
-                      onClick={() => onQuantityChange(itemKey, item.quantity + 1)}
+                      onClick={() => onQuantityChange(itemKey, 1, "adjust")}
                       className="flex h-full items-center justify-center border-l border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
                       aria-label={`Increase ${item.productName} ${item.size ?? item.sku}`}
                     >
@@ -857,74 +868,4 @@ function getGroupSizeRange(items: CartLineItem[]) {
   }
 
   return sizes.join(", ");
-}
-
-async function hydrateCartImages(items: CartLineItem[]) {
-  const missingDetailsItems = items.filter(
-    (item) => !item.imageUrl || item.unitPrice === undefined
-  );
-
-  if (missingDetailsItems.length === 0 || !hasSupabasePublicConfig()) {
-    return null;
-  }
-
-  try {
-    const variantIds = Array.from(
-      new Set(missingDetailsItems.map((item) => item.variantId))
-    );
-    const { data, error } = await createSupabaseBrowserClient()
-      .from("product_variants")
-      .select("id,price,products(image_url,image_url_2,image_url_3)")
-      .in("id", variantIds);
-
-    if (error) {
-      return null;
-    }
-
-    const detailsByVariantId = new Map(
-      (data ?? []).map((variant) => [
-        String(variant.id),
-        {
-          imageUrl: readVariantImageUrl(variant.products),
-          unitPrice:
-            variant.price === null || variant.price === undefined
-              ? undefined
-              : Number(variant.price)
-        }
-      ])
-    );
-    const hydratedItems = items.map((item) => ({
-      ...item,
-      imageUrl: item.imageUrl ?? detailsByVariantId.get(item.variantId)?.imageUrl,
-      unitPrice: item.unitPrice ?? detailsByVariantId.get(item.variantId)?.unitPrice
-    }));
-
-    return hydratedItems.some(
-      (item, index) =>
-        item.imageUrl !== items[index]?.imageUrl ||
-        item.unitPrice !== items[index]?.unitPrice
-    )
-      ? hydratedItems
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function readVariantImageUrl(products: unknown) {
-  const product = Array.isArray(products) ? products[0] : products;
-
-  if (typeof product !== "object" || product === null) {
-    return undefined;
-  }
-
-  const record = product as Record<string, unknown>;
-
-  return typeof record.image_url === "string"
-    ? record.image_url
-    : typeof record.image_url_2 === "string"
-      ? record.image_url_2
-      : typeof record.image_url_3 === "string"
-        ? record.image_url_3
-        : undefined;
 }

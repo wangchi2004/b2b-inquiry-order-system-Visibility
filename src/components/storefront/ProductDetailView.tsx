@@ -64,18 +64,18 @@ export function ProductDetailView({ product, locale, canViewPrices }: {
         setMessage("");
         setAdded(false);
     }
-    function addToCart() {
+    async function addToCart() {
         try {
             const existing = readCart().filter(item => item.variantId === variantId).reduce((sum, item) => sum + item.quantity, 0);
             const item = detailCartItem(product, variantId, amount, existing);
             setCartLocale(locale);
             setContinueShoppingPath(`/${locale}/products/${encodeURIComponent(product.slug)}`);
-            addCartItems([item]);
+            await addCartItems([item]);
             setMessage(shopText(locale, "{count} {unit} added to your inquiry cart.", { count: amount, unit: variant?.unit || "item" }));
             setAdded(true);
         }
         catch (error) {
-            setMessage(error instanceof Error && error.name !== "SecurityError" && error.name !== "QuotaExceededError" ? error.message : "Your cart could not be saved. Please allow browser storage and try again.");
+            setMessage(error instanceof Error && error.name !== "SecurityError" && error.name !== "QuotaExceededError" ? shopText(locale,error.message) : "Your cart could not be saved. Please allow browser storage and try again.");
             setAdded(false);
         }
     }

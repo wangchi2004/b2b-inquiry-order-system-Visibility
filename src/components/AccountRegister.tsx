@@ -29,6 +29,7 @@ export function AccountRegister({ locale }: {
             }
             if (result.signedIn) {
                 window.dispatchEvent(new Event('account-session-changed'));
+            try { localStorage.setItem('account-session-sync',String(Date.now())); } catch { /* Cross-tab notification is optional. */ }
                 router.push(`/${locale}/account`);
                 router.refresh();
                 return;

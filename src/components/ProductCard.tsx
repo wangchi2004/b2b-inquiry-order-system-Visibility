@@ -96,13 +96,13 @@ export function ProductCard({ product, mode = "order", labels, locale = "en" }: 
     setAddedMessage("");
   }
 
-  function addToCart() {
+  async function addToCart() {
     if (selectedItems.length === 0) {
       setAddedMessage(labels?.enterQuantity ?? "Enter at least one quantity.");
       return;
     }
 
-    addCartItems(selectedItems);
+    try { await addCartItems(selectedItems); } catch (error) { setAddedMessage(error instanceof Error ? shopText(locale,error.message) : shopText(locale,"Cart sync failed / 购物车同步失败")); return; }
     setContinueShoppingPath(`${window.location.pathname}${window.location.search}`);
     setCartLocale(getLocaleFromPath(window.location.pathname));
     setAddedMessage(labels?.added ?? "Added to inquiry cart.");

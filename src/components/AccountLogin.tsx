@@ -23,6 +23,7 @@ export function AccountLogin({ signedIn, locale, nextPath }: {
                 return;
             }
             window.dispatchEvent(new Event('account-session-changed'));
+            try { localStorage.setItem('account-session-sync',String(Date.now())); } catch { /* Cross-tab notification is optional. */ }
             if (!signedIn)
                 router.push(nextPath ?? `/${locale}/catalog`);
             router.refresh();

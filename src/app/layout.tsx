@@ -1,3 +1,5 @@
+import { AccountCartSync } from "@/components/AccountCartSync";
+import { AccountDataRefresh } from "@/components/AccountDataRefresh";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import type { Metadata } from "next";
 import "@/styles/globals.css";
@@ -14,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body><FavoritesProvider>{children}</FavoritesProvider></body>
+      <body><FavoritesProvider><AccountCartSync/><AccountDataRefresh/>{children}</FavoritesProvider></body>
     </html>
   );
 }

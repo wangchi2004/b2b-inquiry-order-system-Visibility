@@ -29,60 +29,94 @@ export function getCartItemKey(item: Pick<CartLineItem, "productId" | "variantId
   return item.variantId ?? `${item.productId}-${item.sku ?? ""}`;
 }
 
-export function readCart() {
-  if (typeof window === "undefined") {
-    return [];
+type CartChange = {type:'add'|'set'|'remove'|'consume';variantId:string;quantity?:number;expected?:number};
+let owner: string | null | undefined;
+let cloudItems: CartLineItem[] = [];
+let revision = -1;
+let epoch = 0;
+let pending = Promise.resolve();
+let pendingCount = 0;
+export function isCartSyncPending(){return pendingCount>0;}
+const notify = () => window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT));
+export function resetAccountCart() { owner=undefined;cloudItems=[];revision=-1;++epoch;notify(); }
+export function readGuestCart() {
+  if(typeof window==='undefined')return [];
+  try{return normalizeCartItems(JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY)??'[]')).filter(item=>/^[0-9a-f-]{36}$/i.test(item.variantId)&&Number.isSafeInteger(item.quantity)&&item.quantity<=100000);}catch{return [];}
+}
+export function readCart(): CartLineItem[] { return owner===undefined?[]:owner===null?readGuestCart():cloudItems; }
+export function cartOwner() { return owner; }
+function acceptCart(data:{userId:string;revision:number;items:CartLineItem[]}) {
+  if(owner!==data.userId){owner=data.userId;revision=-1;}
+  if(data.revision<revision)return;
+  revision=data.revision;cloudItems=normalizeCartItems(data.items);notify();
+}
+export async function refreshAccountCart() {
+  const version=epoch;
+  const res=await fetch(`/api/cart?locale=${window.location?.pathname?.match(/^\/(en|zh|ja|ko)(?:\/|$)/)?.[1]??'en'}`,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+  if(version!==epoch)return;
+  if(res.status===401){if(owner!==null)++epoch;owner=null;cloudItems=[];revision=-1;notify();return;}
+  if(!res.ok)throw new Error('Cart sync failed / 购物车同步失败');
+  const data=await res.json();if(version===epoch){if(owner!==undefined&&owner!==data.userId)++epoch;acceptCart(data);}
+}
+async function sendChanges(changes:CartChange[], existingId?:string) {
+  if(!changes.length)return;
+  if(owner===undefined)await refreshAccountCart();
+  if(!owner)throw new Error("Sign in to sync your cart / 请先登录后再保存购物车");
+  const targetOwner=owner;
+  const version=epoch,operationId=existingId??crypto.randomUUID();
+  let response:Response|undefined;
+  for(let attempt=0;attempt<2;attempt++){
+    if(version!==epoch)throw new Error("Account changed / 账号已切换，请重试");
+    try{response=await fetch(`/api/cart?locale=${window.location?.pathname?.match(/^\/(en|zh|ja|ko)(?:\/|$)/)?.[1]??'en'}`,{method:'POST',signal:AbortSignal.timeout(15000),headers:{'Content-Type':'application/json'},body:JSON.stringify({operationId,changes,userId:targetOwner})});if(response.status<500)break;}catch{ /* Retry the same operation ID, never apply an increment twice. */ }
   }
-
-  const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
-
-  if (!savedCart) {
-    return [];
+  if(version!==epoch)throw new Error('Account changed / 账号已切换，请重试');
+  if(!response||!response.ok){
+    await refreshAccountCart().catch(()=>{});
+    if(response?.status===401)throw new Error('Sign in to sync your cart / 请先登录后再保存购物车');
+    throw new Error(response?.status===409?'Cart changed on another device. Review and retry. / 另一设备已修改购物车，请查看最新数量后重试。':'Cart sync failed. Please refresh before retrying. / 购物车同步失败，请刷新确认后重试。');
   }
-
-  try {
-    return normalizeCartItems(JSON.parse(savedCart));
-  } catch {
-    return [];
-  }
+  const data=await response.json();if(version===epoch)acceptCart(data);
 }
-
-export function writeCart(items: CartLineItem[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalizeCartItems(items)));
-  window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT));
+function queueChanges(build:()=>CartChange[],operationId?:string) {
+  const queuedEpoch=epoch;
+  pendingCount++;notify();
+  const result=pending.then(()=>{if(queuedEpoch!==epoch)throw new Error("Account changed / 账号已切换，请重试");return sendChanges(build(),operationId);}).finally(()=>{pendingCount--;notify();});
+  pending=result.catch(()=>{});return result;
 }
-
-export function addCartItems(newItems: CartLineItem[]) {
-  const currentCart = readCart();
-  writeCart(mergeCartItems(currentCart, newItems));
+export async function addCartItems(newItems:CartLineItem[]) {
+  // Signed-in cart is authoritative on the server; no account data goes in guest storage.
+  return queueChanges(()=>newItems.map(item=>({type:'add',variantId:item.variantId,quantity:item.quantity})));
 }
-
-export function updateCartItemQuantity(itemKey: string, quantity: number) {
-  const safeQuantity = Math.max(0, Math.floor(quantity) || 0);
-  const updatedItems = readCart()
-    .map((item) =>
-      getCartItemKey(item) === itemKey
-        ? {
-            ...item,
-            quantity: safeQuantity
-          }
-        : item
-    )
-    .filter((item) => item.quantity > 0);
-
-  writeCart(updatedItems);
+export async function writeCart(items:CartLineItem[]) {
+  const before=readCart();
+  return queueChanges(()=>{
+    const result:CartChange[]=[];
+    for(const old of before){const next=items.find(i=>getCartItemKey(i)===getCartItemKey(old));if(!next)result.push({type:'remove',variantId:old.variantId,expected:old.quantity});else if(next.quantity!==old.quantity)result.push({type:'set',variantId:old.variantId,quantity:next.quantity,expected:old.quantity});}
+    return result;
+  });
 }
-
-export function removeCartItem(itemKey: string) {
-  writeCart(readCart().filter((item) => getCartItemKey(item) !== itemKey));
+export async function updateCartItemQuantity(itemKey:string,quantity:number,expected?:number) {
+  const item=readCart().find(item=>getCartItemKey(item)===itemKey);if(!item)return;
+  return queueChanges(()=>[{type:quantity>0?'set':'remove',variantId:item.variantId,quantity,expected:expected??item.quantity}]);
 }
-
-export function clearCart() {
-  writeCart([]);
+export async function adjustCartItemQuantity(itemKey:string,delta:number){
+  const item=readCart().find(item=>getCartItemKey(item)===itemKey);if(!item||!delta)return;
+  return queueChanges(()=>[{type:delta>0?"add":"consume",variantId:item.variantId,quantity:Math.abs(delta)}]);
+}
+export async function removeCartItem(itemKey:string){return updateCartItemQuantity(itemKey,0);}
+export async function clearCart(){return writeCart([]);}
+export async function consumeCartItems(items:CartLineItem[]){return queueChanges(()=>items.map(item=>({type:'consume',variantId:item.variantId,quantity:item.quantity})));}
+export async function importGuestCart(){
+  if(!owner)throw new Error('Please sign in / 请先登录');
+  const targetOwner=owner,targetEpoch=epoch;
+  const snapshot=window.localStorage.getItem(CART_STORAGE_KEY);
+  const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(owner+":"+snapshot)))).map(byte=>byte.toString(16).padStart(2,"0")).join("");
+  const operationId=`${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
+  if(targetEpoch!==epoch||owner!==targetOwner)throw new Error("Account changed / 账号已切换，请重试");
+  const guest=readGuestCart();
+  await queueChanges(()=>guest.map(item=>({type:"add",variantId:item.variantId,quantity:item.quantity})),operationId);
+  if(snapshot===window.localStorage.getItem(CART_STORAGE_KEY))window.localStorage.removeItem(CART_STORAGE_KEY);
+  notify();
 }
 
 export function setContinueShoppingPath(path: string) {
@@ -174,26 +208,6 @@ export function readVisitorOrderSession() {
   } catch {
     return null;
   }
-}
-
-function mergeCartItems(currentCart: CartLineItem[], newItems: CartLineItem[]) {
-  const merged = new Map<string, CartLineItem>();
-
-  for (const item of [...currentCart, ...newItems]) {
-    const key = getCartItemKey(item);
-    const existingItem = merged.get(key);
-
-    if (existingItem) {
-      merged.set(key, {
-        ...existingItem,
-        quantity: existingItem.quantity + item.quantity
-      });
-    } else if (item.quantity > 0) {
-      merged.set(key, item);
-    }
-  }
-
-  return Array.from(merged.values());
 }
 
 function normalizeCartItems(value: unknown): CartLineItem[] {

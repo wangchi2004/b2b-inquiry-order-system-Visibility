@@ -17,28 +17,33 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const idsRef = useRef<string[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [pending, setPending] = useState<Set<string>>(new Set());
+  const fetching = useRef(false);
   const locks = useRef(new Set<string>());
   const generation = useRef(0);
   const accountEpoch = useRef(0);
   const reload = useCallback(async () => {
-    if (locks.current.size) return;
+    if (locks.current.size || fetching.current) return;
+    fetching.current=true;
     const version = ++generation.current;
     try {
-      const res = await fetch('/api/favorites', { cache: 'no-store' });
+      const res = await fetch('/api/favorites', { cache: 'no-store', signal: AbortSignal.timeout(10000) });
       if (version !== generation.current) return;
       if (res.status === 401) { idsRef.current = []; setIds([]); setStatus('guest'); return; }
       if (!res.ok) throw new Error();
       const data = await res.json();
       if (version !== generation.current) return;
       idsRef.current = data.ids; setIds(data.ids); setStatus('ready');
-    } catch { if (version === generation.current) setStatus('error'); }
+    } catch { if (version === generation.current) setStatus('error'); } finally { fetching.current=false; }
   }, []);
   useEffect(() => {
     const sequence = generation;
     let active = true;
     queueMicrotask(() => { if (active) void reload(); });
     const changed = () => { void reload(); };
-    const storage = (event: StorageEvent) => { if (event.key === SYNC_KEY) changed(); };
+    const storage = (event: StorageEvent) => { if (event.key === 'account-session-sync') sessionChanged(); else if (event.key === SYNC_KEY) changed(); };
+    const timer=window.setInterval(()=>{if(document.visibilityState!=='hidden')changed();},5000);
+    const visibility=()=>{if(document.visibilityState==='visible')changed();};
+    document.addEventListener('visibilitychange',visibility);
     window.addEventListener('focus', changed);
     window.addEventListener('storage', storage);
     const sessionChanged = () => {
@@ -48,8 +53,10 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('account-session-changed', sessionChanged);
     return () => {
+      window.clearInterval(timer);
       active = false;
       ++sequence.current;
+      document.removeEventListener('visibilitychange',visibility);
       window.removeEventListener('focus', changed);
       window.removeEventListener('storage', storage);
       window.removeEventListener('account-session-changed', sessionChanged);
