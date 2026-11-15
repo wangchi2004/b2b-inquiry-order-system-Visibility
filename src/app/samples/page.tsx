@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Header } from "@/components/Header";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
+import { requireAccount } from "@/lib/accountSession";
 import { ProductCatalog } from "@/components/ProductCatalog";
 import { SampleAnalyticsRecorder } from "@/components/SampleAnalyticsRecorder";
 import { getActiveProductsWithVariants } from "@/lib/products";
@@ -12,13 +13,14 @@ type SamplePageProps = {
 };
 
 export default async function SamplePage({ searchParams }: SamplePageProps) {
+  await requireAccount("en", "/samples");
   const { category, q } = await searchParams;
   const { products, categoryTree, error } = await getActiveProductsWithVariants("en");
 
   return (
     <main className="min-h-screen">
       <SampleAnalyticsRecorder locale="en" />
-      <Header />
+      <ShopHeader locale="en" />
       <section className="mx-auto max-w-[1600px] px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>

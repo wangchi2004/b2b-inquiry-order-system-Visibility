@@ -24,7 +24,7 @@ to receive a refresh cookie. Passwords are never stored in browser storage.
 5. Verify an old `/storage/v1/object/public/sample-files/<filename>` URL no
    longer returns the file (including any previously cached copies).
 
-The public `/samples` product image gallery remains available. The mobile app uses a separate session.
+The `/samples` product gallery now requires the same website account login. The mobile app uses a separate session.
 
 ## Password recovery
 
@@ -53,3 +53,21 @@ to their account. New customers confirm their email before signing in. Add the
 four `https://www.wangchi2004.com/{locale}/account` URLs to the auth redirect
 allowlist, and enable email signups and confirmation in the auth provider.
 The register API uses the public auth client, never privileged account creation.
+
+
+## Unified inquiry login
+
+All legacy inquiry entrances use the same verified website session as the header.
+`/order/{token}`, `/{locale}/order/{token}`, `/samples`, and cart pages require
+login on the server. Guests are redirected to the personal center with an
+internal return destination. A saved visitor email/country is only contact data
+and never grants access. The original homepage entrance remains available; it
+shows the current account and offers entry instead of a separate email login.
+
+Private order links require the signed-in email to match the linked customer;
+a different account is sent to general inquiry without exposing customer data.
+Order submission and image upload require the same account cookie. Checkout
+shows a read-only account email, and the server overrides submitted emails with
+the verified account email. Private-link customer updates are also scoped to
+that email. Contact country, company and shipping information remain checkout
+fields, not login credentials.

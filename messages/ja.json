@@ -24,7 +24,7 @@
     "description": "海外のお客様が商品と数量を選択し、お問い合わせを送信できるB2B向けシステムです。確認メールも送信されます。",
     "contact": "お問い合わせ先",
     "enterTitle": "商品ページへ",
-    "enterDescription": "まずメールアドレスと国を入力してください。アカウントやパスワードは不要です。",
+    "enterDescription": "上部のアカウントでログインしてから商品選択に進んでください。",
     "enterButton": "商品ページへ",
     "viewCatalog": "カタログセンター",
     "viewSamples": "サンプルを見る",

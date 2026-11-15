@@ -76,10 +76,10 @@ export default async function HomePage() {
         </div>
         <div>
           <h2 className="mb-3 text-xl font-semibold text-slate-950">
-            Login / Enter Product Page
+            Enter Product Page / 进入选品询价
           </h2>
           <p className="mb-4 text-sm text-slate-600">
-            Select your language, then fill in your email and country to enter the product page.
+            Sign in using the account at the top, then choose a language to enter product selection.
           </p>
           <GeneralOrderEntryForm
             redirectTo="/en/order/general"
@@ -93,7 +93,7 @@ export default async function HomePage() {
             }}
             labels={{
               language: "Language",
-              button: "Login"
+              button: "Enter Product Page"
             }}
           />
         </div>

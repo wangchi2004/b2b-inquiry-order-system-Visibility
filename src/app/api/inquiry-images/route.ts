@@ -1,7 +1,13 @@
+import { accountUser } from "@/lib/accountSession";
 import { NextResponse } from "next/server";
 import { uploadInquiryImageToR2 } from "@/lib/r2";
 
 export async function POST(request: Request) {
+  const publicUrl = new URL(request.url);
+  publicUrl.host = request.headers.get("host") ?? publicUrl.host;
+  if (request.headers.get("origin") !== publicUrl.origin) return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+  const user = await accountUser();
+  if (!user?.email) return NextResponse.json({ message: "Please sign in before uploading inquiry images." }, { status: 401 });
   let formData: FormData;
 
   try {
@@ -18,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const file = formData.get("file");
-  const email = formData.get("email");
+  const email = user.email;
   const slot = Number(formData.get("slot") ?? 1);
 
   if (!(file instanceof File)) {

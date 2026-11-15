@@ -24,7 +24,7 @@
     "description": "A private inquiry ordering system for overseas customers to select products, submit quantities, and receive order confirmation by email.",
     "contact": "Contact",
     "enterTitle": "Enter Product Page",
-    "enterDescription": "Please fill in your email and country first. No account or password is required.",
+    "enterDescription": "Please sign in using the account at the top before entering product selection.",
     "enterButton": "Enter Product Page",
     "viewCatalog": "Catalog Center",
     "viewSamples": "View Samples",

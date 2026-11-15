@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { CartPageContent } from "@/app/cart/page";
+import { CartPageContent } from "@/components/CartPageContent";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
+import { requireAccount } from "@/lib/accountSession";
 
 type LocalizedCartPageProps = {
   params: Promise<{
@@ -11,12 +13,14 @@ export default async function LocalizedCartPage({
   params
 }: LocalizedCartPageProps) {
   const { locale } = await params;
+  const user = await requireAccount(locale, `/${locale}/cart`);
   const common = await getTranslations("Common");
   const catalog = await getTranslations("Catalog");
   const cart = await getTranslations("Cart");
 
   return (
-    <CartPageContent
+    <><ShopHeader locale={locale} /><CartPageContent
+      accountEmail={user.email!}
       locale={locale}
       labels={{
         siteName: common("siteName"),
@@ -63,6 +67,6 @@ export default async function LocalizedCartPage({
         submitLoading: cart("submitLoading"),
         remove: cart("remove")
       }}
-    />
+    /></>
   );
 }

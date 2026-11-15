@@ -1,7 +1,7 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-export function AccountLogin({ signedIn, locale }: { signedIn: boolean; locale: string }) {
+export function AccountLogin({ signedIn, locale, nextPath }: { signedIn: boolean; locale: string; nextPath?: string }) {
   const router = useRouter();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -13,7 +13,7 @@ export function AccountLogin({ signedIn, locale }: { signedIn: boolean; locale: 
       const res = await fetch('/api/account/session', { method: signedIn ? 'DELETE' : 'POST', headers: { 'Content-Type': 'application/json' }, body: form ? JSON.stringify({ email: form.get('email'), password: form.get('password') }) : undefined });
       if (!res.ok) { setError((await res.json()).error ?? 'Please try again'); return; }
       window.dispatchEvent(new Event('account-session-changed'));
-      if (!signedIn) router.push(`/${locale}/catalog`);
+      if (!signedIn) router.push(nextPath ?? `/${locale}/catalog`);
       router.refresh();
     } catch { setError('Please try again / 请重试'); } finally { setBusy(false); }
   }

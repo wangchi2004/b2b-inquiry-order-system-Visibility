@@ -24,7 +24,7 @@
     "description": "해외 고객이 제품과 수량을 선택하고 문의를 제출하면 이메일로 확인을 받는 B2B 문의 시스템입니다.",
     "contact": "연락처",
     "enterTitle": "제품 페이지로 이동",
-    "enterDescription": "먼저 이메일과 국가를 입력해 주세요. 계정이나 비밀번호는 필요 없습니다.",
+    "enterDescription": "상단 계정으로 로그인한 후 상품 선택으로 이동하세요.",
     "enterButton": "제품 페이지로 이동",
     "viewCatalog": "카탈로그 센터",
     "viewSamples": "샘플 보기",

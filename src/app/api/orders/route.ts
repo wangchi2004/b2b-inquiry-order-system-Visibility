@@ -1,3 +1,4 @@
+import { accountUser } from "@/lib/accountSession";
 import { NextResponse } from "next/server";
 import { sendOrderNotificationEmails } from "@/lib/email";
 import { getCustomerShippingDetails } from "@/lib/customerShipping";
@@ -7,6 +8,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 import type { CartLineItem, OrderCustomerInput, PricedOrderLineItem } from "@/lib/types";
 
 export async function POST(request: Request) {
+  const publicUrl = new URL(request.url);
+  publicUrl.host = request.headers.get("host") ?? publicUrl.host;
+  if (request.headers.get("origin") !== publicUrl.origin) return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+  const user = await accountUser();
+  if (!user?.email) return NextResponse.json({ message: "Please sign in before submitting an inquiry.", code: "LOGIN_REQUIRED" }, { status: 401 });
   let payload: unknown;
 
   try {
@@ -22,6 +28,9 @@ export async function POST(request: Request) {
     );
   }
 
+  if (payload && typeof payload === "object" && "customer" in payload && payload.customer && typeof payload.customer === "object") {
+    payload = { ...payload, customer: { ...payload.customer, email: user.email } };
+  }
   const validation = validateOrderSubmission(payload);
 
   if (!validation.ok) {
@@ -41,7 +50,7 @@ export async function POST(request: Request) {
   try {
     const supabase = createSupabaseAdminClient();
     const pricedItems = await getPricedOrderItems(items);
-    const linkedCustomerId = await getLinkedCustomerId(token);
+    const linkedCustomerId = await getLinkedCustomerId(token, user.email);
     const customerRecord = await findOrSaveCustomer(customer, linkedCustomerId);
     const customerShippingDetails = await getCustomerShippingDetails(customerRecord.id);
 
@@ -273,14 +282,14 @@ async function findOrSaveCustomer(
   return newCustomer;
 }
 
-async function getLinkedCustomerId(token: string | undefined) {
+async function getLinkedCustomerId(token: string | undefined, email: string) {
   if (!token) {
     return undefined;
   }
 
   const orderLink = await getOrderLinkByToken(token);
 
-  if (orderLink.status === "valid" || orderLink.status === "expired") {
+  if ((orderLink.status === "valid" || orderLink.status === "expired") && orderLink.customer.email?.toLowerCase() === email.toLowerCase()) {
     return orderLink.customerId;
   }
 

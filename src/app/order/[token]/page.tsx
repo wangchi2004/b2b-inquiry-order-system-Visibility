@@ -1,5 +1,6 @@
-import { Header } from "@/components/Header";
-import { GeneralOrderGate } from "@/components/GeneralOrderGate";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
+import { requireAccount } from "@/lib/accountSession";
+import { redirect } from "next/navigation";
 import { LegacyOrderLocaleRedirect } from "@/components/LegacyOrderLocaleRedirect";
 import { OrderLinkSessionSync } from "@/components/OrderLinkSessionSync";
 import { ProductCatalog } from "@/components/ProductCatalog";
@@ -20,10 +21,12 @@ type OrderPageProps = {
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   const { token } = await params;
   const { category, q } = await searchParams;
+  const user = await requireAccount("en", `/order/${encodeURIComponent(token)}`);
   const [{ products, categoryTree, error }, orderLink] = await Promise.all([
     getActiveProductsWithVariants(),
     getOrderLinkByToken(token)
   ]);
+  if ((orderLink.status === "valid" || orderLink.status === "expired") && orderLink.customer.email?.toLowerCase() !== user.email?.toLowerCase()) redirect("/en/order/general");
   const linkedCustomer =
     orderLink.status === "valid" || orderLink.status === "expired"
       ? orderLink.customer
@@ -37,10 +40,9 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           customer: orderLink.customer
         }
       : null;
-  const shouldRequireVisitorInfo = !linkedCustomer;
   const productContent = (
     <>
-      <VisitorSessionRecorder locale="en" customer={linkedCustomer} />
+      <VisitorSessionRecorder locale="en" customer={linkedCustomer ?? { email: user.email }} />
       {error ? (
         <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           {error}
@@ -72,7 +74,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     <main className="min-h-screen">
       <LegacyOrderLocaleRedirect />
       <OrderLinkSessionSync session={orderLinkSession} />
-      <Header />
+      <ShopHeader locale="en" />
       <section className="mx-auto max-w-[1600px] px-6 py-10">
         <div className="mb-8">
           <p className="text-sm text-slate-500">Private order link</p>
@@ -104,11 +106,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             </div>
           ) : null}
         </div>
-        {shouldRequireVisitorInfo ? (
-          <GeneralOrderGate>{productContent}</GeneralOrderGate>
-        ) : (
-          productContent
-        )}
+        {productContent}
       </section>
     </main>
   );

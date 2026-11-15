@@ -1,6 +1,6 @@
 import { requireAccount } from "@/lib/accountSession";
 import Link from "next/link";
-import { Header } from "@/components/Header";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
 import { getCatalogFiles, type CatalogFile } from "@/data/catalog";
 
 type SupportedLocale = "en" | "ko" | "ja" | "zh";
@@ -63,22 +63,13 @@ export async function CatalogCenter({ locale = "en" }: { locale?: string }) {
   const normalizedLocale: SupportedLocale =
     locale === "zh" || locale === "ja" || locale === "ko" ? locale : "en";
   const labels = copy[normalizedLocale];
-  await requireAccount(normalizedLocale);
+  await requireAccount(normalizedLocale, `/${normalizedLocale}/catalog`);
   const files = await getCatalogFiles();
   const homeHref = `/${normalizedLocale}`;
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <Header
-        homeHref={homeHref}
-        catalogHref={`/${normalizedLocale}/catalog`}
-        cartHref={`/${normalizedLocale}/cart`}
-        labels={{
-          siteName: labels.siteName,
-          catalog: labels.catalogNav,
-          cart: labels.cart
-        }}
-      />
+      <ShopHeader locale={normalizedLocale} />
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">

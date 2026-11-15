@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { Header } from "@/components/Header";
-import { GeneralOrderGate } from "@/components/GeneralOrderGate";
+import { ShopHeader } from "@/components/storefront/ShopHeader";
+import { requireAccount } from "@/lib/accountSession";
+import { redirect } from "next/navigation";
 import { LocaleSessionSync } from "@/components/LocaleSessionSync";
 import { OrderLinkSessionSync } from "@/components/OrderLinkSessionSync";
 import { ProductCatalog } from "@/components/ProductCatalog";
@@ -27,14 +28,15 @@ export default async function LocalizedOrderPage({
     params,
     searchParams
   ]);
+  const user = await requireAccount(locale, `/${locale}/order/${encodeURIComponent(token)}`);
   const common = await getTranslations("Common");
   const catalog = await getTranslations("Catalog");
-  const home = await getTranslations("Home");
   const staticCategoryNames = catalog.raw("categoryNames") as Record<string, string>;
   const [{ products, categoryTranslations, categoryTree, error }, orderLink] = await Promise.all([
     getActiveProductsWithVariants(locale),
     getOrderLinkByToken(token)
   ]);
+  if ((orderLink.status === "valid" || orderLink.status === "expired") && orderLink.customer.email?.toLowerCase() !== user.email?.toLowerCase()) redirect(`/${locale}/order/general`);
   const linkedCustomer =
     orderLink.status === "valid" || orderLink.status === "expired"
       ? orderLink.customer
@@ -48,11 +50,10 @@ export default async function LocalizedOrderPage({
           customer: orderLink.customer
         }
       : null;
-  const shouldRequireVisitorInfo = !linkedCustomer;
   const basePath = `/${locale}/order/${encodeURIComponent(token)}`;
   const productContent = (
     <>
-      <VisitorSessionRecorder locale={locale} customer={linkedCustomer} />
+      <VisitorSessionRecorder locale={locale} customer={linkedCustomer ?? { email: user.email }} />
       {error ? (
         <div className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           {error}
@@ -121,16 +122,7 @@ export default async function LocalizedOrderPage({
     <main className="min-h-screen">
       <LocaleSessionSync locale={locale} />
       <OrderLinkSessionSync session={orderLinkSession} />
-      <Header
-        homeHref={`/${locale}`}
-        catalogHref={`/${locale}/catalog`}
-        cartHref={`/${locale}/cart`}
-        labels={{
-          siteName: common("siteName"),
-          catalog: common("catalog"),
-          cart: common("cart")
-        }}
-      />
+      <ShopHeader locale={locale} />
       <section className="mx-auto max-w-[1600px] px-6 py-10">
         <div className="mb-8">
           <p className="text-sm text-slate-500">{catalog("privateOrderLink")}</p>
@@ -162,26 +154,7 @@ export default async function LocalizedOrderPage({
             </div>
           ) : null}
         </div>
-        {shouldRequireVisitorInfo ? (
-          <GeneralOrderGate
-            redirectTo={basePath}
-            labels={{
-              title: home("enterTitle"),
-              description: home("enterDescription"),
-              email: common("email"),
-              country: common("country"),
-              button: home("enterButton"),
-              emailPlaceholder: home("emailPlaceholder"),
-              countryPlaceholder: home("countryPlaceholder"),
-              emailError: home("emailError"),
-              countryError: home("countryError")
-            }}
-          >
-            {productContent}
-          </GeneralOrderGate>
-        ) : (
-          productContent
-        )}
+        {productContent}
       </section>
     </main>
   );
