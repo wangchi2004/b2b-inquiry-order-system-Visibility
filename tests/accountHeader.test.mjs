@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 async function renderHeader(user, locale) {
   let source = await readFile(new URL('../src/components/storefront/ShopHeader.tsx', import.meta.url), 'utf8');
   source = source.replace(/^import .*;\n/gm, '');
-  source = `import { createElement, Fragment } from ${JSON.stringify(import.meta.resolve('react'))};\nconst Link = ({children, ...props}) => createElement('a', props, children);\nconst ShopIcon = () => null;\nconst accountUser = async () => (${JSON.stringify(user)});\n${source}`;
+  source = `import { createElement, Fragment } from ${JSON.stringify(import.meta.resolve('react'))};\nconst Link = ({children, ...props}) => createElement('a', props, children);\nconst ShopIcon = () => null;\nconst LanguageSwitcher = () => createElement("select", {"aria-label":"Language"});\nconst accountUser = async () => (${JSON.stringify(user)});\n${source}`;
   const compiled = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, jsxFactory: 'createElement', jsxFragmentFactory: 'Fragment', module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
   const { ShopHeader } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
   return renderToStaticMarkup(await ShopHeader({ locale }));
