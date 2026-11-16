@@ -72,7 +72,7 @@ export default async function AdminProductsPage({
   searchParams
 }: AdminProductsPageProps) {
   const { password, message, category, product: selectedProductId } = await searchParams;
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

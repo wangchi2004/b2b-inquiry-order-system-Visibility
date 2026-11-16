@@ -4,7 +4,7 @@ import { getTemplateCustomers } from "@/lib/adminEmailTemplates";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const access = checkAdminAccess(searchParams.get("password") ?? undefined);
+  const access = (await checkAdminAccess(searchParams.get("password") ?? undefined));
 
   if (!access.ok) {
     return NextResponse.json(

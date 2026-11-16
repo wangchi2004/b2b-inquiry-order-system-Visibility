@@ -6,7 +6,7 @@ import {addCatalogItemToOrder} from '../actions';
 export default async function AddProducts({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{password?:string;q?:string;page?:string;message?:string}>}) {
   const {id}=await params;
   const {password,q='',page:raw,message}=await searchParams;
-  const access=checkAdminAccess(password);
+  const access=(await checkAdminAccess(password));
   if(!access.ok)return <p className="p-8">请先登录后台。</p>;
   const db=createSupabaseAdminClient();
   const {data:order}=await db.from('orders').select('status,payment_status,quote_updated_at').eq('id',id).maybeSingle();

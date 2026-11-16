@@ -22,7 +22,7 @@ export default async function AdminOrderDetailPage({
   searchParams
 }: AdminOrderDetailPageProps) {
   const [{ id }, { password, message }] = await Promise.all([params, searchParams]);
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

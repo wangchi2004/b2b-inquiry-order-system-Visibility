@@ -15,7 +15,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 
 export async function saveProduct(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
   const returnProduct = readString(formData.get("return_product"));
 
@@ -178,7 +178,7 @@ async function uploadProductImages(
 
 export async function toggleProductStatus(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
   const returnProduct = readString(formData.get("return_product"));
 
@@ -213,7 +213,7 @@ export async function toggleProductStatus(formData: FormData) {
 
 export async function deleteProduct(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
 
   if (!access.ok) {
@@ -253,7 +253,7 @@ export async function deleteProduct(formData: FormData) {
 
 export async function saveProductVariant(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
   const returnProduct = readString(formData.get("return_product"));
 
@@ -336,7 +336,7 @@ export async function saveProductVariant(formData: FormData) {
 
 export async function saveProductVariantsBulk(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
   const returnProduct = readString(formData.get("return_product"));
 
@@ -443,7 +443,7 @@ export async function saveProductVariantsBulk(formData: FormData) {
 
 export async function deleteProductVariant(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
   const returnCategory = readString(formData.get("return_category"));
   const returnProduct = readString(formData.get("return_product"));
 

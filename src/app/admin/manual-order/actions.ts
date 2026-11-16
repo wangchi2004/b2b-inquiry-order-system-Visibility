@@ -20,7 +20,7 @@ type ManualOrderItem = {
 
 export async function createManualOrder(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/manual-order");

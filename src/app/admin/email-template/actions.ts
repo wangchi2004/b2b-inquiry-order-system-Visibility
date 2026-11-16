@@ -12,7 +12,7 @@ import { createEmailClient } from "@/lib/email";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 
 export async function saveEmailCampaignTemplate(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const templateId = readString(formData.get("template_id"));
   const productIds = Array.from(
     new Set(
@@ -152,7 +152,7 @@ export async function saveEmailCampaignTemplate(formData: FormData) {
 }
 
 export async function deactivateEmailCampaignTemplate(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const templateId = readString(formData.get("template_id"));
 
   if (!templateId) {
@@ -176,7 +176,7 @@ export async function deactivateEmailCampaignTemplate(formData: FormData) {
 }
 
 export async function sendEmailCampaign(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const customerId = readString(formData.get("customer_id"));
   const templateId = readString(formData.get("template_id"));
 
@@ -330,8 +330,8 @@ export async function sendEmailCampaign(formData: FormData) {
   });
 }
 
-function requireAdmin(formData: FormData) {
-  const access = checkAdminAccess(readString(formData.get("password")));
+async function requireAdmin(formData: FormData) {
+  const access = (await checkAdminAccess(readString(formData.get("password"))));
 
   if (!access.ok) {
     redirect("/admin/email-template?message=Invalid+admin+password");

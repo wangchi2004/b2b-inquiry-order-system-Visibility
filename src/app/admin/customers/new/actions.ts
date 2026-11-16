@@ -10,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 
 export async function createCustomerProfile(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/customers/new?message=Invalid+admin+password");

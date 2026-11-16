@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
-    if (!checkAdminAccess(String(form.get("password") ?? "")).ok)
+    if (!(await checkAdminAccess(String(form.get("password") ?? ""))).ok)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const productId = String(form.get("product_id") ?? "");
     const variantId = String(form.get("variant_id") ?? "");
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    if (!checkAdminAccess(body?.password).ok)
+    if (!(await checkAdminAccess(body?.password)).ok)
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     if (
       typeof body.productId !== "string" ||

@@ -42,6 +42,13 @@ export default async function proxy(request: NextRequest) {
     }
     return response;
   }
+  if(pathname==='/admin'||pathname.startsWith('/admin/')){
+    const response=NextResponse.next();
+    response.headers.set('Cache-Control','private, no-store');
+    response.headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
+    response.headers.set('Referrer-Policy','no-referrer');
+    return response;
+  }
   const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
   const allowKey = process.env.ADMIN_ACCESS_KEY;
   const hasAllowBypass =

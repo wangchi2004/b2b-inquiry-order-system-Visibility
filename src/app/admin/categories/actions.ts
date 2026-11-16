@@ -20,7 +20,7 @@ type PreparedSampleUploadResult =
   | { ok: false; error: string };
 
 export async function saveCatalogCategory(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const categoryId = nullableString(formData.get("category_id"));
   const name = readString(formData.get("name"));
   const slug = slugify(readString(formData.get("slug")) || name);
@@ -58,7 +58,7 @@ export async function saveCatalogCategory(formData: FormData) {
 }
 
 export async function deleteCatalogCategory(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const categoryId = readString(formData.get("category_id"));
 
   if (!categoryId) {
@@ -90,7 +90,7 @@ export async function prepareSampleFileUpload(input: {
   fileName: string;
   fileSize: number;
 }): Promise<PreparedSampleUploadResult> {
-  const access = checkAdminAccess(input.password);
+  const access = (await checkAdminAccess(input.password));
 
   if (!access.ok) {
     return { ok: false, error: "Invalid admin password. / 管理员密码不正确。" };
@@ -129,7 +129,7 @@ export async function completeSampleFileUpload(input: {
   password: string;
   path: string;
 }): Promise<SampleFileActionResult> {
-  const access = checkAdminAccess(input.password);
+  const access = (await checkAdminAccess(input.password));
 
   if (!access.ok) {
     return { ok: false, error: "Invalid admin password. / 管理员密码不正确。" };
@@ -156,7 +156,7 @@ export async function completeSampleFileUpload(input: {
 }
 
 export async function deleteSampleFile(formData: FormData) {
-  const access = requireAdmin(formData);
+  const access = await requireAdmin(formData);
   const filePath = readString(formData.get("file_path"));
   const returnCategoryId = nullableString(formData.get("return_category_id"));
 
@@ -189,8 +189,8 @@ export async function deleteSampleFile(formData: FormData) {
   );
 }
 
-function requireAdmin(formData: FormData) {
-  const access = checkAdminAccess(readString(formData.get("password")));
+async function requireAdmin(formData: FormData) {
+  const access = (await checkAdminAccess(readString(formData.get("password"))));
 
   if (!access.ok) {
     redirect("/admin/categories?message=Invalid+admin+password");

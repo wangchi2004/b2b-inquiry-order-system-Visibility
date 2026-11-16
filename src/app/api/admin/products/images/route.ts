@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const password = readString(formData.get("password"));
-    const access = checkAdminAccess(password);
+    const access = (await checkAdminAccess(password));
 
     if (!access.ok) {
       return NextResponse.json(
@@ -106,7 +106,7 @@ export async function DELETE(request: Request) {
           imageField?: string;
         }
       | null;
-    const access = checkAdminAccess(requestBody?.password);
+    const access = (await checkAdminAccess(requestBody?.password));
 
     if (!access.ok) {
       return NextResponse.json(

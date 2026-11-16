@@ -28,7 +28,7 @@ type CategoriesPageProps = {
 
 export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const params = await searchParams;
-  const access = checkAdminAccess(params.password);
+  const access = (await checkAdminAccess(params.password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

@@ -16,7 +16,7 @@ export default async function AdminVisitorsPage({
   searchParams
 }: AdminVisitorsPageProps) {
   const { password } = await searchParams;
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

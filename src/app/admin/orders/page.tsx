@@ -13,7 +13,7 @@ type AdminOrdersPageProps = {
 
 export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageProps) {
   const { password, message } = await searchParams;
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

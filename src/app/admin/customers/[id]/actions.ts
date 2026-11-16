@@ -7,7 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 export async function saveCustomerProfile(formData: FormData) {
   const password = readString(formData.get("password"));
   const customerId = readString(formData.get("customer_id"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/email-template?message=Invalid+admin+password");
@@ -81,7 +81,7 @@ export async function saveCustomerProfile(formData: FormData) {
 export async function deleteCustomerProfile(formData: FormData) {
   const password = readString(formData.get("password"));
   const customerId = readString(formData.get("customer_id"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/email-template?message=Invalid+admin+password");
@@ -120,7 +120,7 @@ export async function markCustomerDoNotContact(formData: FormData) {
   const password = readString(formData.get("password"));
   const customerId = readString(formData.get("customer_id"));
   const email = readString(formData.get("email")).toLowerCase();
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/customers?message=Invalid+admin+password");
@@ -170,7 +170,7 @@ export async function saveCustomerTags(formData: FormData) {
   const password = readString(formData.get("password"));
   const customerId = readString(formData.get("customer_id"));
   const tags = normalizeTags(readString(formData.get("tags")));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/customers?message=Invalid+admin+password");
@@ -220,7 +220,7 @@ export async function saveCustomerTags(formData: FormData) {
 
 export async function importVisitorSessionsToCustomers(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/customers?message=Invalid+admin+password");

@@ -45,7 +45,7 @@ export default async function AdminEmailTemplatePage({
   searchParams
 }: AdminEmailTemplatePageProps) {
   const params = await searchParams;
-  const access = checkAdminAccess(params.password);
+  const access = (await checkAdminAccess(params.password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

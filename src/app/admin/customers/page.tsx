@@ -42,7 +42,7 @@ export default async function AdminCustomersPage({
     q = "",
     message
   } = await searchParams;
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     return <AdminAccessMessage reason={access.reason} />;

@@ -10,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 
 export async function saveOrderQuote(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/orders");
@@ -78,7 +78,7 @@ export async function saveOrderQuote(formData: FormData) {
 
 export async function saveOrderItems(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/orders");
@@ -163,7 +163,7 @@ export async function saveOrderItems(formData: FormData) {
 
 export async function sendQuoteReplyEmail(formData: FormData) {
   const password = readString(formData.get("password"));
-  const access = checkAdminAccess(password);
+  const access = (await checkAdminAccess(password));
 
   if (!access.ok) {
     redirect("/admin/orders");
@@ -566,7 +566,7 @@ function escapeHtml(value: string) {
 
 export async function manageMobileOrder(formData: FormData) {
   const password = readString(formData.get("password"));
-  if (!checkAdminAccess(password).ok) redirect("/admin/orders");
+  if (!(await checkAdminAccess(password)).ok) redirect("/admin/orders");
   const id = readString(formData.get("order_id"));
   const action = readString(formData.get("mobile_action"));
   const db = createSupabaseAdminClient();
@@ -581,7 +581,7 @@ export async function manageMobileOrder(formData: FormData) {
 
 export async function updateWebOrderFulfillment(formData: FormData) {
   const password = readString(formData.get('password'));
-  if (!checkAdminAccess(password).ok) redirect('/admin/orders');
+  if (!(await checkAdminAccess(password)).ok) redirect('/admin/orders');
   const id = readString(formData.get('order_id'));
   if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/admin/orders');
   const status = readString(formData.get('next_status'));
@@ -599,7 +599,7 @@ export async function updateWebOrderFulfillment(formData: FormData) {
 
 export async function manageQuotePayment(form: FormData) {
  const password=readString(form.get('password'));
- if(!checkAdminAccess(password).ok)redirect('/admin/orders');
+ if(!(await checkAdminAccess(password)).ok)redirect('/admin/orders');
  const id=readString(form.get('order_id')), action=readString(form.get('quote_action'));
  if(!/^[0-9a-f-]{36}$/i.test(id)||!['publish','paid'].includes(action))redirect('/admin/orders');
  if(action==='publish'&&form.get('stock_confirmed')!=='on')redirect(adminOrderPath(id,password,'请先核实现货、商品价格和运费，并确认尚未收款。'));
@@ -616,7 +616,7 @@ async function orderCanBeEdited(orderId:string) {
 
 export async function addCatalogItemToOrder(form: FormData) {
   const password=readString(form.get('password'));
-  if(!checkAdminAccess(password).ok)redirect('/admin/orders');
+  if(!(await checkAdminAccess(password)).ok)redirect('/admin/orders');
   const id=readString(form.get('order_id'));
   const variant=readString(form.get('variant_id'));
   const quantity=Number(form.get('quantity'));
