@@ -14,24 +14,23 @@ test('administrator tokens reject forgery, expiry and password rotation',()=>{
  assert.equal(tokens.verifyAdminToken(token,'admin-secret',1000+tokens.ADMIN_SESSION_SECONDS*1000),false);
  assert.equal(tokens.verifyAdminToken('customer-token','admin-secret',1000),false);
 });
-test('workspace reveals management links only to administrator session; links contain no password',async()=>{
+test('workspace requires a private password link, hides links on failure and forwards credentials',async()=>{
  let source=await readFile(new URL('../src/app/admin/page.tsx',import.meta.url),'utf8');
  source=source.replace(/^import .*;\n/gm,'');
  const module=await load(`import {createElement} from ${JSON.stringify(import.meta.resolve('react'))};
- let authorized=false;
- export function authorize(value){authorized=value}
- const cookies=async()=>({get:()=>({value:'customer-or-admin-token'})});
- const ADMIN_SESSION_COOKIE='private_admin_session';
- const verifyAdminToken=()=>authorized;
- const loginWorkspace='/login',logoutWorkspace='/logout';
- const Link=props=>createElement('a',props);
+ const notFound=()=>{throw new Error('NOT_FOUND')};
+ const sameSecret=(a,b)=>a===b;
+ const Link=({prefetch,...props})=>createElement('a',props);
  ${source}`);
- const props={searchParams:Promise.resolve({})};
- let html=renderToStaticMarkup(await module.default(props));
- assert.ok(html.includes('管理员密码'));assert.ok(!html.includes('/admin/orders'));assert.ok(!html.includes('/admin/customers'));
- module.authorize(true);html=renderToStaticMarkup(await module.default(props));
+ const previous=process.env.ADMIN_PASSWORD;
+ try{
+ process.env.ADMIN_PASSWORD='private&secret';
+ await assert.rejects(module.default({searchParams:Promise.resolve({})}),/NOT_FOUND/);
+ await assert.rejects(module.default({searchParams:Promise.resolve({password:'wrong'})}),/NOT_FOUND/);
+ const html=renderToStaticMarkup(await module.default({searchParams:Promise.resolve({password:'private&secret'})}));
  for(const route of ['/admin/orders','/admin/manual-order','/admin/products','/admin/categories','/admin/customers','/admin/visitors','tab=send','tab=templates','tab=history'])assert.ok(html.includes(route),route);
- assert.ok(!html.includes('password='));
+ assert.ok(html.includes('password=private%26secret'));assert.ok(!html.includes('type="password"'));assert.ok(!html.includes('<form'));
+ }finally{if(previous===undefined)delete process.env.ADMIN_PASSWORD;else process.env.ADMIN_PASSWORD=previous;}
 });
 test('shared admin guard accepts only independent admin session or admin password',async()=>{
  const source=(await readFile(new URL('../src/lib/admin.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');

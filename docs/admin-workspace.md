@@ -1,17 +1,14 @@
 # Private administrator workspace
 
-The bookmarkable entry is `/admin`. There is no link from the storefront or
-customer account. The workspace lists order, manual order, product, category,
-customer, email and visitor tools. Order/customer details are reached from their
-lists.
+Bookmark `/admin?password=YOUR_ADMIN_PASSWORD` using the deployed ADMIN_PASSWORD
+value, URL-encoded. There is no login form and no storefront/customer account link.
+Missing or incorrect credentials return a not-found response without management
+links. Customer login alone does not grant workspace access.
 
-Customer authentication does not grant administrator access. Enter the existing
-ADMIN_PASSWORD into the workspace password form. A signed, HttpOnly, SameSite
-Strict cookie lasts eight hours (Secure in production). Workspace links carry no
-password. Existing administrator pages, actions and upload/export endpoints now
-also verify this cookie. The existing password access remains compatible.
+Workspace links forward the password to the existing protected administrator
+pages. These pages also retain compatibility with previously issued administrator
+cookies until expiration. The workspace no longer issues login cookies.
 
-Logout clears this browser's administrator cookie. Changing ADMIN_PASSWORD
-invalidates all workspace sessions. Admin pages carry noindex/nofollow,
-no-referrer and private no-store headers. These headers supplement the server
-access checks; they do not replace authentication.
+Anyone holding the complete bookmark has administrator access. Changing the
+server's ADMIN_PASSWORD invalidates old bookmarks and administrator cookies.
+Admin pages use noindex/nofollow, no-referrer and private no-store headers.
