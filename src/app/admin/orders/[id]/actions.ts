@@ -22,6 +22,8 @@ export async function saveOrderQuote(formData: FormData) {
     redirect(adminOrderPath(orderId, password, "Order ID is required."));
   }
 
+  if (!await orderCanBeEdited(orderId)) redirect(adminOrderPath(orderId,password,"此订单已收款或进入履约阶段，不能修改商品和报价。"));
+
   const productSubtotal = readMoney(formData.get("product_subtotal"));
   const shippingFee = readMoney(formData.get("shipping_fee"));
   const grandTotal = readMoney(formData.get("grand_total"));
@@ -88,8 +90,7 @@ export async function saveOrderItems(formData: FormData) {
     redirect(adminOrderPath(orderId, password, "Order ID is required."));
   }
 
-  const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id").eq("id", orderId).maybeSingle();
-  if (mobileOrder?.mobile_user_id) redirect(adminOrderPath(orderId, password, "App orders preserve catalog price snapshots. Use the App order controls."));
+  if (!await orderCanBeEdited(orderId)) redirect(adminOrderPath(orderId,password,"此订单已收款或进入履约阶段，不能修改商品和报价。"));
   const itemUpdates = readOrderItemUpdates(formData);
 
   if (itemUpdates.length === 0) {
@@ -193,6 +194,7 @@ export async function sendQuoteReplyEmail(formData: FormData) {
       orderId,
       error: error instanceof Error ? error.message : error
     });
+    redirect(adminOrderPath(orderId,password,"报价保存失败，邮件未发送。请检查订单状态后重试。"));
   }
 
   let emailErrorMessage: string | null = null;
@@ -246,8 +248,7 @@ async function persistQuote(
   }
 ) {
   const supabase = createSupabaseAdminClient();
-  const { data: mobileOrder } = await supabase.from("orders").select("mobile_user_id").eq("id", orderId).maybeSingle();
-  if (mobileOrder?.mobile_user_id) throw new Error("Use the App order controls to publish a quotation.");
+  if (!await orderCanBeEdited(orderId)) throw new Error("此订单已收款或进入履约阶段，不能修改商品和报价。");
   const { error } = await supabase
     .from("orders")
     .update({
@@ -593,4 +594,22 @@ export async function updateWebOrderFulfillment(formData: FormData) {
   const {data,error} = await db.from('orders').update({status,shipping_carrier:carrier||null,tracking_number:tracking||null}).eq('id',id).is('mobile_user_id',null).eq('status',current.status).select('id').maybeSingle();
   revalidatePath(`/admin/orders/${id}`); revalidatePath('/[locale]/orders','page'); revalidatePath('/[locale]/orders/[id]','page');
   redirect(adminOrderPath(id,password,error||!data?'更新失败，请刷新重试。':'订单状态及物流已更新。'));
+}
+
+
+export async function manageQuotePayment(form: FormData) {
+ const password=readString(form.get('password'));
+ if(!checkAdminAccess(password).ok)redirect('/admin/orders');
+ const id=readString(form.get('order_id')), action=readString(form.get('quote_action'));
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!['publish','paid'].includes(action))redirect('/admin/orders');
+ if(action==='publish'&&form.get('stock_confirmed')!=='on')redirect(adminOrderPath(id,password,'请先核实现货、商品价格和运费，并确认尚未收款。'));
+ const {error}=await createSupabaseAdminClient().rpc('manage_order_payment',{p_id:id,p_action:action,p_version:readString(form.get('quote_version'))||null});
+ const message=error?'操作失败：请刷新并检查报价是否完整、金额是否一致、订单是否已经付款。':action==='paid'?'已记录收款，订单已从客户“我的报价”中移除。':'已确认现货及运费，报价已向客户开放。';
+ revalidatePath(`/admin/orders/${id}`);revalidatePath('/[locale]/quotes','page');revalidatePath('/[locale]/orders/[id]','page');
+ redirect(adminOrderPath(id,password,message));
+}
+
+async function orderCanBeEdited(orderId:string) {
+ const {data,error}=await createSupabaseAdminClient().from('orders').select('status,payment_status').eq('id',orderId).maybeSingle();
+ return !error&&data!==null&&data.payment_status!=='paid'&&!['processing','shipped','completed','cancelled'].includes(data.status);
 }

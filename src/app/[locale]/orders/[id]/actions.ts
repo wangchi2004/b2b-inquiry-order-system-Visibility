@@ -11,8 +11,8 @@ export async function confirmCustomerQuote(form: FormData) {
   if(!/^[0-9a-f-]{36}$/i.test(id)||!Number.isFinite(Date.parse(version))) return;
   const user=await requireAccount(locale,`/${locale}/orders/${id}`);
   const {data,error}=await createSupabaseAdminClient().from('orders').update({status:'confirmed'})
-    .eq('id',id).or(orderOwnerFilter(user)).eq('status','quoted').eq('quote_updated_at',version)
+    .eq('id',id).or(orderOwnerFilter(user)).eq('status','quoted').eq('payment_status','unpaid').not('quote_ready_at','is',null).eq('quote_updated_at',version)
     .not('shipping_fee','is',null).not('grand_total','is',null).select('id').maybeSingle();
-  revalidatePath(`/${locale}/orders`); revalidatePath(`/${locale}/orders/${id}`);
+  revalidatePath(`/${locale}/quotes`); revalidatePath(`/${locale}/orders`); revalidatePath(`/${locale}/orders/${id}`);
   redirect(`/${locale}/orders/${id}?message=${error||!data?'changed':'confirmed'}`);
 }

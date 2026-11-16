@@ -1,4 +1,5 @@
 const copy: Record<string, [string,string,string]> = {
+  'My Quotes':['我的报价','見積り一覧','내 견적'], 'Confirmed stock and shipping quotes awaiting payment.':['这里显示商品现货、价格和运费已确认，等待付款的订单。','在庫・価格・送料を確認済みのお支払い待ち注文です。','재고, 상품 가격 및 배송비가 확인된 미결제 주문입니다.'], 'No unpaid quotes':['暂无待付款报价','お支払い待ちの見積りはありません','미결제 견적이 없습니다'], 'Stock and shipping confirmed':['现货与运费已确认','在庫・送料確認済み','재고 및 배송비 확인 완료'], 'Payment status':['付款状态','支払い状況','결제 상태'], 'unpaid':['未付款','未払い','미결제'], 'paid':['已付款','支払い済み','결제 완료'], 'unknown':['付款状态待核实','支払い状況確認中','결제 상태 확인 중'], 'Contact us about payment':['联系确认付款方式','お支払い方法を問い合わせる','결제 방법 문의'],
   'My Orders':['我的订单','注文履歴','내 주문'], 'Order details':['订单详情','注文詳細','주문 상세'],
   'Order number':['订单编号','注文番号','주문 번호'], 'Created':['下单时间','注文日時','주문일'],
   'Status':['处理状态','状況','처리 상태'], 'new':['待处理','受付済み','접수됨'], 'submitted':['已提交','送信済み','제출됨'],
@@ -9,7 +10,7 @@ const copy: Record<string, [string,string,string]> = {
   'No orders yet':['暂无订单','注文はまだありません','아직 주문이 없습니다'], 'Browse products':['浏览商品','商品を見る','상품 둘러보기'], 'View details':['查看详情','詳細を見る','상세 보기'], 'Back to orders':['返回订单列表','注文履歴に戻る','주문 목록으로'], 'Previous':['上一页','前へ','이전'], 'Next':['下一页','次へ','다음'], 'Refresh':['刷新','更新','새로고침'],
   'Orders unavailable. Please try again.':['订单加载失败，请重试。','注文を読み込めません。再度お試しください。','주문을 불러오지 못했습니다. 다시 시도해 주세요.'], 'Contact us':['联系我们','お問い合わせ','문의하기'], 'Confirm quote':['确认报价','見積りを承認','견적 확인'], 'Quote changed. Refresh and review the latest quote.':['报价已更新，请刷新并查看最新报价。','見積りが更新されました。最新内容をご確認ください。','견적이 변경되었습니다. 새로고침하여 최신 견적을 확인하세요.'], 'Quote confirmed':['报价已确认','見積りを承認しました','견적이 확인되었습니다'], 'Confirmation is not a payment.':['确认报价不代表已付款。','見積りの承認は支払いではありません。','견적 확인은 결제가 아닙니다.'], 'Order status':['订单进度','注文状況','주문 진행 상황'],
 };
-const english: Record<string,string>={new:'Received',submitted:'Submitted',quoted:'Awaiting quote confirmation',confirmed:'Confirmed',processing:'Preparing order',shipped:'Shipped',completed:'Completed',cancelled:'Cancelled'};
+const english: Record<string,string>={unpaid:'Unpaid',paid:'Paid',unknown:'Payment status unverified',new:'Received',submitted:'Submitted',quoted:'Awaiting quote confirmation',confirmed:'Confirmed',processing:'Preparing order',shipped:'Shipped',completed:'Completed',cancelled:'Cancelled'};
 export function orderText(locale: string, key: string) { const i=({zh:0,ja:1,ko:2} as Record<string,number>)[locale]; return i===undefined ? english[key] ?? key : copy[key]?.[i] ?? key; }
 export function orderMoney(value: number | null, locale: string) { return value === null ? '—' : new Intl.NumberFormat(locale, {style:'currency',currency:'USD'}).format(value); }
 export function orderDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale, {dateStyle:'medium',timeStyle:'short',timeZone:'UTC'}).format(new Date(value)) + ' UTC'; }

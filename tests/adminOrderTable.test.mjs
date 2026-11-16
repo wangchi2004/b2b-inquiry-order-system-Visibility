@@ -1,0 +1,18 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+test('original product table retains images, editable specifications, shipping and quote totals',async()=>{
+ const source=(await readFile(new URL('../src/components/AdminOrderProductDetails.tsx',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
+ const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React,jsxFactory:'createElement',jsxFragmentFactory:'Fragment'}}).outputText;
+ const code=`import {createElement,Fragment,useMemo,useState} from ${JSON.stringify(import.meta.resolve('react'))};${js}`;
+ const {AdminOrderProductDetails}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+ const props={groups:[{key:'sole',productName:'Sole',imageUrl:'https://example.com/sole.png',totalQuantity:2,items:[{id:'line-1',product_name:'Sole',sku:'SOLE-42',size:'42',color:'Black',quantity:2,unit:'pair',unit_price:10.5}]}],orderId:'order-1',customerEmail:'buyer@example.com',password:'test-password',savedQuote:{productSubtotal:21,shippingFee:5,grandTotal:26,paypalFee:1.3,paypalCollection:27.3,shippingRecipientName:'Buyer',shippingPhone:'123',shippingCountry:'UK',shippingAddress:'Street 1',shippingNote:null,quoteUpdatedAt:null},saveItemsAction:'/test-items',saveAction:'/test-quote',sendEmailAction:'/test-email'};
+ const html=renderToStaticMarkup(createElement(AdminOrderProductDetails,props));
+ for(const text of ['Image','Product','SKU','Size','Color','Qty','Unit','Unit Price','Subtotal','Shipping Details','PayPal Collection','Save Order Items','Save Quote','Send Reply Email'])assert.ok(html.includes(text),text);
+ for(const name of ['item_product_name_line-1','item_sku_line-1','item_size_line-1','item_color_line-1','item_quantity_line-1','item_unit_line-1','item_unit_price_line-1'])assert.ok(html.includes(`name="${name}"`),name);
+ assert.ok(html.includes('https://example.com/sole.png'));assert.ok(html.includes('$21.00'));
+ const locked=renderToStaticMarkup(createElement(AdminOrderProductDetails,{...props,readOnly:true}));assert.match(locked,/<fieldset[^>]*disabled=""/);assert.ok(locked.includes('Sole'));
+});

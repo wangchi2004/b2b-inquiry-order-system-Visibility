@@ -7,8 +7,9 @@ export function orderOwnerFilter(user: OrderIdentity) {
   const email = (user.email ?? '').replace(/[\\%_]/g, '\\$&');
   return `mobile_user_id.eq.${user.id},and(mobile_user_id.is.null,customer_email.ilike.${JSON.stringify(email)})`;
 }
-export const orderFields = 'id,status,created_at,product_subtotal,shipping_fee,grand_total,quote_updated_at,paypal_fee,paypal_collection,shipping_carrier,tracking_number,shipping_recipient_name,shipping_phone,shipping_country,shipping_address,order_items(id,product_id,product_name,sku,size,color,quantity,unit,unit_price)';
+export const orderFields = 'id,status,payment_status,paid_at,quote_ready_at,created_at,product_subtotal,shipping_fee,grand_total,quote_updated_at,paypal_fee,paypal_collection,shipping_carrier,tracking_number,shipping_recipient_name,shipping_phone,shipping_country,shipping_address,order_items(id,product_id,product_name,sku,size,color,quantity,unit,unit_price)';
 export type CustomerOrder = {
+  payment_status?: 'unknown'|'unpaid'|'paid'; paid_at?: string|null; quote_ready_at?: string|null;
   id: string; status: string; created_at: string; product_subtotal: number | null;
   shipping_fee: number | null; grand_total: number | null; quote_updated_at: string | null;
   paypal_fee: number | null; paypal_collection: number | null;

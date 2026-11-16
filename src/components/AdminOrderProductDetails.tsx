@@ -13,6 +13,7 @@ export type AdminOrderProductGroup = {
 
 type AdminOrderProductDetailsProps = {
   groups: AdminOrderProductGroup[];
+  readOnly?: boolean;
   orderId?: string;
   customerEmail?: string;
   password?: string;
@@ -36,6 +37,7 @@ type AdminOrderProductDetailsProps = {
 
 export function AdminOrderProductDetails({
   groups,
+  readOnly = false,
   orderId,
   customerEmail,
   password,
@@ -62,7 +64,8 @@ export function AdminOrderProductDetails({
   }
 
   return (
-    <div className="mt-4">
+    <fieldset disabled={readOnly} className="mt-4 min-w-0">
+      {readOnly ? <p className="mb-4 rounded bg-slate-50 p-3 text-sm text-slate-600">此订单已收款或进入履约阶段，商品与报价仅供查看。</p> : null}
       <div className="overflow-x-auto">
         <form action={saveItemsAction}>
           {orderId ? <input type="hidden" name="order_id" value={orderId} /> : null}
@@ -292,7 +295,7 @@ export function AdminOrderProductDetails({
           </div>
         </form>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

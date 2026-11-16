@@ -1,10 +1,11 @@
+import { ConfirmPaidButton } from "@/components/ConfirmPaidButton";
 import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import { AdminOrderProductDetails } from "@/components/AdminOrderProductDetails";
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
 import { type AdminOrderItem, getAdminOrderById } from "@/lib/adminOrders";
-import { manageMobileOrder, updateWebOrderFulfillment, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
+import { manageMobileOrder, manageQuotePayment, updateWebOrderFulfillment, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
 
 type AdminOrderDetailPageProps = {
   params: Promise<{
@@ -28,7 +29,7 @@ export default async function AdminOrderDetailPage({
   }
 
   const order = await getAdminOrderById(id);
-  const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id,shipping_carrier,tracking_number").eq("id", id).maybeSingle();
+  const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id,shipping_carrier,tracking_number,payment_status,paid_at,quote_ready_at").eq("id", id).maybeSingle();
   const productGroups = groupOrderItemsByProduct(order.order_items);
   const inquiryImageUrls = [
     order.inquiry_image_url_1,
@@ -55,15 +56,23 @@ export default async function AdminOrderDetailPage({
           </Link>
         </div>
 
+        <form action={manageQuotePayment} className="mb-6 space-y-4 rounded border border-blue-200 bg-blue-50 p-5">
+          <h2 className="text-lg font-semibold">我的报价 · 现货确认与付款状态</h2>
+          <p className="text-sm">付款状态：{({unknown:'历史付款状态待核实',unpaid:'未付款',paid:'已付款'} as Record<string,string>)[mobileOrder?.payment_status??'unknown']} {mobileOrder?.paid_at?` · 收款记录时间：${mobileOrder.paid_at}`:''}</p>
+          <p className="text-sm">先在下方保存完整报价（商品金额应与明细一致，合计应等于商品金额加运费），核实商品现货和运费后再发布。已付款订单不会出现在客户“我的报价”中。</p>
+          <input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/><input type="hidden" name="quote_version" value={order.quote_updated_at??''}/>
+          {mobileOrder?.payment_status!=='paid'?<><label className="flex items-start gap-2 text-sm"><input type="checkbox" name="stock_confirmed" className="mt-1"/>已核实本订单商品现货、商品价格和运费，且尚未收款</label><div className="flex flex-wrap gap-3"><button name="quote_action" value="publish" className="min-h-11 rounded bg-blue-700 px-4 text-white">确认并发布到客户“我的报价”</button><ConfirmPaidButton/></div></>:<p className="font-semibold text-emerald-800">已收款，保留在“我的订单”中。</p>}
+          {mobileOrder?.quote_ready_at?<p className="text-xs text-slate-600">现货与运费确认时间：{mobileOrder.quote_ready_at}</p>:null}
+        </form>
         {mobileOrder?.mobile_user_id && <form action={manageMobileOrder} className="mb-6 rounded border border-emerald-200 bg-emerald-50 p-5">
           <h2 className="mb-3 text-lg font-semibold">客户订单 · 报价及物流</h2>
-          <p className="mb-4 text-sm">商品金额保留下单时的价格。填写运费并发布报价后，客户可在网站或 App 内确认。报价确认后不可修改。</p>
+          <p className="mb-4 text-sm">商品金额保留下单时的价格。先保存商品及运费报价，再在上方核实现货并发布到客户“我的报价”。</p>
           <input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/>
           <div className="flex flex-wrap gap-3">
             <input aria-label="Shipping fee USD" name="shipping_fee" type="number" min="0" step="0.01" placeholder="运费 USD" defaultValue={order.shipping_fee ?? ""} className="rounded border p-2"/>
             <input aria-label="Shipping carrier" name="carrier" placeholder="物流公司" defaultValue={mobileOrder.shipping_carrier ?? ""} className="rounded border p-2"/>
             <input aria-label="Tracking number" name="tracking" placeholder="物流单号" defaultValue={mobileOrder.tracking_number ?? ""} className="rounded border p-2"/>
-            {[["quote","发布报价"],["processing","开始备货"],["shipped","确认发货"],["completed","完成订单"],["cancelled","取消订单"]].map(([value,label]) => <button key={value} name="mobile_action" value={value} className="rounded bg-emerald-900 px-4 py-2 text-white">{label}</button>)}
+            {[["quote","保存商品及运费报价"],["processing","开始备货"],["shipped","确认发货"],["completed","完成订单"],["cancelled","取消订单"]].map(([value,label]) => <button key={value} name="mobile_action" value={value} className="rounded bg-emerald-900 px-4 py-2 text-white">{label}</button>)}
           </div>
         </form>}
         {!mobileOrder?.mobile_user_id && <form action={updateWebOrderFulfillment} className="mb-6 space-y-3 rounded border border-blue-200 bg-blue-50 p-5">
@@ -128,8 +137,8 @@ export default async function AdminOrderDetailPage({
               {message}
             </p>
           ) : null}
-          {mobileOrder?.mobile_user_id ? <div className="space-y-2">{order.order_items.map(item => <div key={item.id} className="rounded border p-3">{item.product_name} · {item.sku} · {item.quantity} × USD {item.unit_price ?? "—"}</div>)}</div> : (
           <AdminOrderProductDetails
+            readOnly={mobileOrder?.payment_status==='paid'||['processing','shipped','completed','cancelled'].includes(order.status)}
             groups={productGroups}
             orderId={order.id}
             customerEmail={order.customer_email}
@@ -151,7 +160,6 @@ export default async function AdminOrderDetailPage({
             saveAction={saveOrderQuote}
             sendEmailAction={sendQuoteReplyEmail}
           />
-          )}
         </section>
       </section>
     </main>

@@ -4,7 +4,7 @@ import {usePathname,useRouter} from 'next/navigation';
 export function AccountDataRefresh(){
  const pathname=usePathname(),router=useRouter();
  useEffect(()=>{
-  if(pathname!=='/cart'&&!/^\/(en|zh|ja|ko)\/(addresses|orders|account|cart)(\/|$)/.test(pathname))return;
+  if(pathname!=='/cart'&&!/^\/(en|zh|ja|ko)\/(addresses|orders|quotes|account|cart)(\/|$)/.test(pathname))return;
   const refresh=()=>{if(document.visibilityState!=='hidden'&&!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'))router.refresh();};
   const timer=window.setInterval(()=>{if(!pathname.endsWith('/cart'))refresh();},15000);
   document.addEventListener('visibilitychange',refresh);
