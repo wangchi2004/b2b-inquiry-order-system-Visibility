@@ -27,3 +27,10 @@ remain below it. Paid or fulfillment-stage orders show this layout read-only.
 Database migrations: `20261115143204_unpaid_customer_quotes.sql` and
 `20261115145130_protect_confirmed_payments.sql`. Tests use an isolated local
 database and server rendering; no customer order is changed during testing.
+
+Administrators can use Modify order / Add products from an editable order to
+search the active catalog and append a variant and quantity. New lines use the
+current catalog price; existing negotiated lines remain unchanged. A transactional
+service-only function locks the order, rejects stale submissions, recalculates
+all totals and clears quote publication. The order returns to new for review.
+Paid and fulfillment-stage orders cannot accept catalog additions.

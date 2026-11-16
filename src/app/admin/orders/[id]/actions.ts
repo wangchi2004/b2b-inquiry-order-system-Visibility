@@ -613,3 +613,26 @@ async function orderCanBeEdited(orderId:string) {
  const {data,error}=await createSupabaseAdminClient().from('orders').select('status,payment_status').eq('id',orderId).maybeSingle();
  return !error&&data!==null&&data.payment_status!=='paid'&&!['processing','shipped','completed','cancelled'].includes(data.status);
 }
+
+export async function addCatalogItemToOrder(form: FormData) {
+  const password=readString(form.get('password'));
+  if(!checkAdminAccess(password).ok)redirect('/admin/orders');
+  const id=readString(form.get('order_id'));
+  const variant=readString(form.get('variant_id'));
+  const quantity=Number(form.get('quantity'));
+  if(!/^[0-9a-f-]{36}$/i.test(id))redirect('/admin/orders');
+  const query=new URLSearchParams({password,q:readString(form.get('q')),page:readString(form.get('page'))||'1'});
+  let message='请选择有效规格和数量。';
+  if(/^[0-9a-f-]{36}$/i.test(variant)&&Number.isSafeInteger(quantity)&&quantity>0&&quantity<=100000){
+    const {error}=await createSupabaseAdminClient().rpc('admin_add_order_catalog_item',{
+      p_order:id,p_variant:variant,p_quantity:quantity,p_version:readString(form.get('quote_version'))||null
+    });
+    message=error?'添加失败：请刷新订单，检查商品价格及订单状态后重试。':'商品已添加到原订单，金额已重新计算。请核实现货和运费后重新发布报价。';
+  }
+  query.set('message',message);
+  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath(`/admin/orders/${id}/add-products`);
+  revalidatePath('/[locale]/orders/[id]','page');
+  revalidatePath('/[locale]/quotes','page');
+  redirect(`/admin/orders/${id}/add-products?${query}`);
+}

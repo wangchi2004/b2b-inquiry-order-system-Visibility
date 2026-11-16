@@ -137,6 +137,7 @@ export default async function AdminOrderDetailPage({
               {message}
             </p>
           ) : null}
+          {mobileOrder?.payment_status!=='paid'&&['new','submitted','quoted','confirmed'].includes(order.status)?<Link href={`/admin/orders/${id}/add-products?password=${encodeURIComponent(access.password)}`} className="my-4 inline-flex min-h-11 items-center rounded bg-blue-700 px-4 text-white">修改订单 / 添加商品</Link>:null}
           <AdminOrderProductDetails
             readOnly={mobileOrder?.payment_status==='paid'||['processing','shipped','completed','cancelled'].includes(order.status)}
             groups={productGroups}
