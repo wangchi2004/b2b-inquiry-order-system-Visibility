@@ -18,7 +18,7 @@ test('customer list scopes both account and legacy email, and paginates',async()
  assert.deepEqual(db.calls.find(c=>c[0]==='range'),['range',10,19]);
  const filter=db.calls.find(c=>c[0]==='or')[1];
  assert.equal(filter,`mobile_user_id.eq.${owner.id},and(mobile_user_id.is.null,customer_email.ilike."user@example.com")`);
- assert.ok(!api.orderFields.includes('note'));assert.ok(!api.orderFields.includes('customers('));
+ assert.ok(!api.orderFields.includes('note'));assert.ok(!api.orderFields.includes('customers('));assert.ok(api.orderFields.includes('products(image_url,image_url_2,image_url_3)'));
 });
 test('detail lookup adds order id AND the same ownership restriction; unauthorized/missing order is null',async()=>{
  const db=database({data:null,error:null});const api=await loader(db);
@@ -74,10 +74,22 @@ test('customer detail renders line items, real quote and tracking, and pending s
  const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React,jsxFactory:'createElement',jsxFragmentFactory:'Fragment'}}).outputText;
  const code=`import {createElement,Fragment} from ${JSON.stringify(import.meta.resolve('react'))};import {orderText,orderMoney,orderDate} from ${JSON.stringify(new URL('../src/i18n/orders.ts',import.meta.url).href)};export default (customerOrder)=>{const requireAccount=async()=>({id:'user'});const ShopHeader=()=>null;const Link=({children,...props})=>createElement('a',props,children);const notFound=()=>{throw Error('NOT_FOUND')};const confirmCustomerQuote='/test-confirm';${js};return OrderDetailPage;}`;
  const factory=(await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`)).default;
- const fixture={id,status:'shipped',created_at:'2026-11-15T01:00:00Z',quote_updated_at:'2026-11-15T02:00:00Z',product_subtotal:100,shipping_fee:10,grand_total:110,paypal_fee:null,paypal_collection:null,shipping_carrier:'DHL',tracking_number:'TEST123',shipping_recipient_name:'Buyer',shipping_country:'UK',shipping_address:'Test address',shipping_phone:null,order_items:[{id:'line',product_name:'Repair sole',sku:'SOLE1',size:'40',color:'black',quantity:2,unit:'pair',unit_price:50}]};
+ const fixture={id,status:'shipped',created_at:'2026-11-15T01:00:00Z',quote_updated_at:'2026-11-15T02:00:00Z',product_subtotal:100,shipping_fee:10,grand_total:110,paypal_fee:null,paypal_collection:null,shipping_carrier:'DHL',tracking_number:'TEST123',shipping_recipient_name:'Buyer',shipping_country:'UK',shipping_address:'Test address',shipping_phone:null,order_items:[{id:'line',product_name:'Repair sole',sku:'SOLE1',size:'40',color:'black',quantity:2,unit:'pair',unit_price:50,product_id:'sole',products:{image_url:null,image_url_2:'https://example.com/order-sole.jpg',image_url_3:null}}]};
  const page=factory(async()=>fixture);
  const html=renderToStaticMarkup(await page({params:Promise.resolve({locale:'en',id}),searchParams:Promise.resolve({})}));
  for(const value of ['Repair sole','DHL','TEST123','$110.00','Shipped','Test address'])assert.ok(html.includes(value),value);
+ assert.ok(html.includes('https://example.com/order-sole.jpg'));assert.ok(html.includes('object-contain'));
+ for(const column of ['Image','SKU','Size','Color','Quantity','Unit','Unit price','Subtotal'])assert.ok(html.includes(column),column);
+ assert.ok(html.includes('overflow-x-auto'));assert.ok(!html.includes('name="item_'));
+ const grouped=factory(async()=>({...fixture,order_items:[fixture.order_items[0],{...fixture.order_items[0],id:'line2',size:'41'}]}));
+ const groupedHtml=renderToStaticMarkup(await grouped({params:Promise.resolve({locale:'zh',id}),searchParams:Promise.resolve({})}));
+ assert.ok(groupedHtml.includes('rowSpan="2"')||groupedHtml.includes('rowspan="2"'));assert.equal((groupedHtml.match(/<img /g)||[]).length,1);
+ const arrayPhoto=factory(async()=>({...fixture,order_items:[{...fixture.order_items[0],products:[fixture.order_items[0].products]}]}));
+ const arrayHtml=renderToStaticMarkup(await arrayPhoto({params:Promise.resolve({locale:'en',id}),searchParams:Promise.resolve({})}));
+ assert.ok(arrayHtml.includes('https://example.com/order-sole.jpg'));
+ const noPhoto=factory(async()=>({...fixture,order_items:[{...fixture.order_items[0],products:null,unit_price:null}]}));
+ const noPhotoHtml=renderToStaticMarkup(await noPhoto({params:Promise.resolve({locale:'zh',id}),searchParams:Promise.resolve({})}));
+ assert.ok(noPhotoHtml.includes('暂无图片'));assert.ok(noPhotoHtml.includes('—'));
  const pending=factory(async()=>({...fixture,status:'new',quote_updated_at:null,grand_total:null,shipping_fee:null,shipping_carrier:null,tracking_number:null}));
  const pendingHtml=renderToStaticMarkup(await pending({params:Promise.resolve({locale:'zh',id}),searchParams:Promise.resolve({})}));
  assert.ok(pendingHtml.includes('等待报价'));assert.ok(pendingHtml.includes('尚未发货'));assert.ok(!pendingHtml.includes('/test-confirm'));

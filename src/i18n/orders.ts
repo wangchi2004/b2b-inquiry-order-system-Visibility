@@ -1,4 +1,5 @@
 const copy: Record<string, [string,string,string]> = {
+  'Image':['图片','画像','이미지'], 'SKU':['SKU','SKU','SKU'], 'Unit':['单位','単位','단위'], 'Subtotal':['小计','小計','소계'], 'No image':['暂无图片','画像なし','이미지 없음'], 'Scroll to see all columns':['左右滑动查看完整商品明细','横にスクロールして全項目を表示','좌우로 스크롤하여 전체 상품 내역 보기'],
   'My Quotes':['我的报价','見積り一覧','내 견적'], 'Confirmed stock and shipping quotes awaiting payment.':['这里显示商品现货、价格和运费已确认，等待付款的订单。','在庫・価格・送料を確認済みのお支払い待ち注文です。','재고, 상품 가격 및 배송비가 확인된 미결제 주문입니다.'], 'No unpaid quotes':['暂无待付款报价','お支払い待ちの見積りはありません','미결제 견적이 없습니다'], 'Stock and shipping confirmed':['现货与运费已确认','在庫・送料確認済み','재고 및 배송비 확인 완료'], 'Payment status':['付款状态','支払い状況','결제 상태'], 'unpaid':['未付款','未払い','미결제'], 'paid':['已付款','支払い済み','결제 완료'], 'unknown':['付款状态待核实','支払い状況確認中','결제 상태 확인 중'], 'Contact us about payment':['联系确认付款方式','お支払い方法を問い合わせる','결제 방법 문의'],
   'My Orders':['我的订单','注文履歴','내 주문'], 'Order details':['订单详情','注文詳細','주문 상세'],
   'Order number':['订单编号','注文番号','주문 번호'], 'Created':['下单时间','注文日時','주문일'],
