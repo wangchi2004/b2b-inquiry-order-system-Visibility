@@ -5,7 +5,7 @@ import { AdminOrderProductDetails } from "@/components/AdminOrderProductDetails"
 import { Header } from "@/components/Header";
 import { checkAdminAccess } from "@/lib/admin";
 import { type AdminOrderItem, getAdminOrderById } from "@/lib/adminOrders";
-import { manageMobileOrder, manageQuotePayment, updateWebOrderFulfillment, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
+import { manageMobileOrder, reopenOrderQuote, manageQuotePayment, updateWebOrderFulfillment, saveOrderItems, saveOrderQuote, sendQuoteReplyEmail } from "./actions";
 
 type AdminOrderDetailPageProps = {
   params: Promise<{
@@ -30,6 +30,7 @@ export default async function AdminOrderDetailPage({
 
   const order = await getAdminOrderById(id);
   const { data: mobileOrder } = await createSupabaseAdminClient().from("orders").select("mobile_user_id,shipping_carrier,tracking_number,payment_status,paid_at,quote_ready_at").eq("id", id).maybeSingle();
+  const quoteLocked=Boolean(mobileOrder?.quote_ready_at)||order.status==='confirmed';
   const productGroups = groupOrderItemsByProduct(order.order_items);
   const inquiryImageUrls = [
     order.inquiry_image_url_1,
@@ -138,7 +139,10 @@ export default async function AdminOrderDetailPage({
             </p>
           ) : null}
           {mobileOrder?.payment_status!=='paid'&&['new','submitted','quoted','confirmed'].includes(order.status)?<Link href={`/admin/orders/${id}/add-products?password=${encodeURIComponent(access.password)}`} className="my-4 inline-flex min-h-11 items-center rounded bg-blue-700 px-4 text-white">修改订单 / 添加商品</Link>:null}
+          {quoteLocked&&mobileOrder?.payment_status!=='paid'&&['quoted','confirmed'].includes(order.status)?<form action={reopenOrderQuote} className="my-4"><input type="hidden" name="password" value={access.password}/><input type="hidden" name="order_id" value={id}/><input type="hidden" name="quote_version" value={order.quote_updated_at??''}/><button className="min-h-11 rounded border px-4">修改报价（撤回当前报价并重新确认）</button></form>:null}
           <AdminOrderProductDetails
+            key={`${order.id}:${order.quote_updated_at}:${mobileOrder?.quote_ready_at}:${order.status}`}
+            confirmedQuote={quoteLocked}
             readOnly={mobileOrder?.payment_status==='paid'||['processing','shipped','completed','cancelled'].includes(order.status)}
             groups={productGroups}
             orderId={order.id}

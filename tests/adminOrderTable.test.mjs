@@ -14,5 +14,9 @@ test('original product table retains images, editable specifications, shipping a
  for(const text of ['Image','Product','SKU','Size','Color','Qty','Unit','Unit Price','Subtotal','Shipping Details','PayPal Collection','Save Order Items','Save Quote','Send Reply Email'])assert.ok(html.includes(text),text);
  for(const name of ['item_product_name_line-1','item_sku_line-1','item_size_line-1','item_color_line-1','item_quantity_line-1','item_unit_line-1','item_unit_price_line-1'])assert.ok(html.includes(`name="${name}"`),name);
  assert.ok(html.includes('https://example.com/sole.png'));assert.ok(html.includes('$21.00'));
+ const confirmed=renderToStaticMarkup(createElement(AdminOrderProductDetails,{...props,confirmedQuote:true,savedQuote:{...props.savedQuote,shippingFee:8,grandTotal:29,paypalFee:null,paypalCollection:null}}));
+ assert.match(confirmed,/<fieldset[^>]*disabled=""/);assert.ok(confirmed.includes('$29.00'));assert.ok(!confirmed.includes('$26.00'));assert.ok(!confirmed.includes('$1.45'));
+ const noPrice=renderToStaticMarkup(createElement(AdminOrderProductDetails,{...props,groups:[{...props.groups[0],items:[{...props.groups[0].items[0],unit_price:null,product_variants:{price:999}}]}]}));
+ assert.ok(!noPrice.includes('999'));assert.ok(!noPrice.includes('$1998.00'));
  const locked=renderToStaticMarkup(createElement(AdminOrderProductDetails,{...props,readOnly:true}));assert.match(locked,/<fieldset[^>]*disabled=""/);assert.ok(locked.includes('Sole'));
 });

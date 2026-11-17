@@ -14,6 +14,7 @@ export type AdminOrderProductGroup = {
 type AdminOrderProductDetailsProps = {
   groups: AdminOrderProductGroup[];
   readOnly?: boolean;
+  confirmedQuote?: boolean;
   orderId?: string;
   customerEmail?: string;
   password?: string;
@@ -38,6 +39,7 @@ type AdminOrderProductDetailsProps = {
 export function AdminOrderProductDetails({
   groups,
   readOnly = false,
+  confirmedQuote = false,
   orderId,
   customerEmail,
   password,
@@ -51,21 +53,22 @@ export function AdminOrderProductDetails({
       ? ""
       : String(savedQuote.shippingFee)
   );
-  const productSubtotal = useMemo(() => calculateProductSubtotal(groups), [groups]);
+  const calculatedSubtotal = useMemo(() => calculateProductSubtotal(groups), [groups]);
+  const locked=readOnly||confirmedQuote;
+  const productSubtotal=locked&&savedQuote?savedQuote.productSubtotal:calculatedSubtotal;
   const shippingAmount = parseMoneyInput(shippingFee);
-  const grandTotal = productSubtotal === null
-    ? null
-    : productSubtotal + (shippingAmount ?? 0);
-  const paypalFee = grandTotal === null ? null : grandTotal * 0.05;
-  const paypalCollection = grandTotal === null ? null : grandTotal * 1.05;
+  const calculatedTotal=productSubtotal===null?null:productSubtotal+(shippingAmount??0);
+  const grandTotal=locked&&savedQuote?savedQuote.grandTotal:calculatedTotal;
+  const paypalFee=locked&&savedQuote?savedQuote.paypalFee:grandTotal===null?null:grandTotal*0.05;
+  const paypalCollection=locked&&savedQuote?savedQuote.paypalCollection:grandTotal===null?null:grandTotal*1.05;
 
   if (groups.length === 0) {
     return <p className="mt-4 text-sm text-slate-600">No order items found.</p>;
   }
 
   return (
-    <fieldset disabled={readOnly} className="mt-4 min-w-0">
-      {readOnly ? <p className="mb-4 rounded bg-slate-50 p-3 text-sm text-slate-600">此订单已收款或进入履约阶段，商品与报价仅供查看。</p> : null}
+    <fieldset disabled={locked} className="mt-4 min-w-0">
+      {locked ? <p className="mb-4 rounded bg-slate-50 p-3 text-sm text-slate-600">当前显示已保存的订单及报价，与客户端一致。修改已确认报价前，请先点击“修改报价”。</p> : null}
       <div className="overflow-x-auto">
         <form action={saveItemsAction}>
           {orderId ? <input type="hidden" name="order_id" value={orderId} /> : null}
@@ -385,7 +388,7 @@ function calculateProductSubtotal(groups: AdminOrderProductGroup[]) {
 }
 
 function getUnitPrice(item: AdminOrderItem) {
-  return item.unit_price ?? item.product_variants?.price ?? null;
+  return item.unit_price ?? null;
 }
 
 function parseMoneyInput(value: string) {

@@ -569,6 +569,7 @@ export async function manageMobileOrder(formData: FormData) {
   if (!(await checkAdminAccess(password)).ok) redirect("/admin/orders");
   const id = readString(formData.get("order_id"));
   const action = readString(formData.get("mobile_action"));
+  if(action==='quote'&&!await orderCanBeEdited(id))redirect(adminOrderPath(id,password,"请先撤回已确认报价再修改。"));
   const db = createSupabaseAdminClient();
   const { error } = await db.rpc("manage_mobile_order", {
     p_id: id, p_action: action, p_shipping: readMoney(formData.get("shipping_fee")),
@@ -610,8 +611,8 @@ export async function manageQuotePayment(form: FormData) {
 }
 
 async function orderCanBeEdited(orderId:string) {
- const {data,error}=await createSupabaseAdminClient().from('orders').select('status,payment_status').eq('id',orderId).maybeSingle();
- return !error&&data!==null&&data.payment_status!=='paid'&&!['processing','shipped','completed','cancelled'].includes(data.status);
+ const {data,error}=await createSupabaseAdminClient().from('orders').select('status,payment_status,quote_ready_at').eq('id',orderId).maybeSingle();
+ return !error&&data!==null&&data.payment_status!=='paid'&&!data.quote_ready_at&&!['confirmed','processing','shipped','completed','cancelled'].includes(data.status);
 }
 
 export async function addCatalogItemToOrder(form: FormData) {
@@ -635,4 +636,14 @@ export async function addCatalogItemToOrder(form: FormData) {
   revalidatePath('/[locale]/orders/[id]','page');
   revalidatePath('/[locale]/quotes','page');
   redirect(`/admin/orders/${id}/add-products?${query}`);
+}
+
+export async function reopenOrderQuote(form:FormData){
+ const password=readString(form.get('password'));
+ if(!(await checkAdminAccess(password)).ok)redirect('/admin/orders');
+ const id=readString(form.get('order_id')),version=readString(form.get('quote_version'));
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!version)redirect('/admin/orders');
+ const {data,error}=await createSupabaseAdminClient().from('orders').update({quote_ready_at:null,status:'new',quote_updated_at:new Date().toISOString()}).eq('id',id).eq('quote_updated_at',version).neq('payment_status','paid').in('status',['quoted','confirmed']).select('id').maybeSingle();
+ revalidatePath(`/admin/orders/${id}`);revalidatePath('/[locale]/quotes','page');revalidatePath('/[locale]/orders/[id]','page');
+ redirect(adminOrderPath(id,password,error||!data?'报价已变化或订单不可修改，请刷新。':'已撤回报价，修改后请重新保存、核实并发布。'));
 }
